@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 11 PCM Resource Hub</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Live Interactive Chemistry Background -->
+    <canvas id="chem-canvas"></canvas> 
+    
+    <header>
+        <h1>EduShare</h1>
+        <div class="header-controls">
+            <button id="theme-toggle" class="icon-btn">🌙</button>
+            <div id="user-info"></div>
+        </div>
+    </header>
+
+    <main class="animate-fade-in">
+        <!-- Secure Google Login Only Section -->
+        <section id="auth-section">
+            <h2>Student Portal</h2>
+            <p style="margin-bottom: 2rem;">Access is strictly restricted to authorized students. Please log in with your Google account to request access.</p>
+            <button id="google-btn">Log in with Google</button>
+        </section>
+
+        <!-- First-Time Profile Setup -->
+        <section id="onboarding-section" class="hidden">
+            <h2>Complete Your Profile</h2>
+            <p>Set up your student identity to send an access request to the Administrator.</p>
+            <input type="text" id="profile-name" placeholder="Full Name">
+            <input type="text" id="profile-username" placeholder="Username (e.g., gameoid)">
+            <input type="text" id="profile-class" placeholder="Class & Section (e.g., 11 PCM A)">
+            <button id="save-profile-btn" style="width: 100%;">Request Access</button>
+        </section>
+
+        <!-- Pending Approval Waiting Room -->
+        <section id="pending-section" class="hidden" style="text-align: center; padding: 2rem 0;">
+            <h2 style="color: var(--accent);">Request Sent!</h2>
+            <p>Your account is waiting for approval from the Administrator.</p>
+            <p style="font-size: 0.9rem; margin-bottom: 2rem;">Keep this page open. You will be automatically redirected once access is granted.</p>
+            <button id="logout-pending-btn" class="secondary">Cancel & Log Out</button>
+        </section>
+
+        <!-- Main Dashboard -->
+        <section id="dashboard-section" class="hidden">
+            <div class="tabs">
+                <button id="tab-feed" class="active">Class Feed</button>
+                <button id="tab-admin" class="hidden">Admin Panel</button>
+            </div>
+
+            <!-- Resource Feed -->
+            <div id="feed-view" class="fade-in">
+                <div id="upload-box" class="hidden">
+                    <h3>Share a New Resource</h3>
+                    <input type="text" id="resource-title" placeholder="e.g., Chapter 4 Physics Notes">
+                    <input type="file" id="resource-file" accept=".pdf, .doc, .docx, .ppt, .pptx, image/*">
+                    <div id="upload-progress" class="hidden">Uploading... <span id="progress-text">0%</span></div>
+                    <button id="upload-btn">Upload to Class Feed</button>
+                </div>
+                <h3>Recent Class Resources</h3>
+                <div id="resource-list"></div>
+            </div>
+
+            <!-- Admin Panel -->
+            <div id="admin-view" class="hidden fade-in">
+                <div class="admin-header">
+                    <div>
+                        <h3>Manage Students</h3>
+                        <p>Approve new requests and manage existing access.</p>
+                    </div>
+                    <div class="admin-stats">
+                        <span id="stat-students">0 Approved Students</span>
+                    </div>
+                </div>
+                
+                <!-- Pending Requests Queue -->
+                <div id="pending-requests-container" class="hidden">
+                    <h4 style="color: #f59e0b; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Pending Requests</h4>
+                    <div id="pending-list" class="student-grid" style="margin-bottom: 2rem;"></div>
+                </div>
+
+                <!-- Approved Students -->
+                <h4 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Approved Students</h4>
+                <div id="student-list" class="student-grid"></div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
