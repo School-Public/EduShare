@@ -59,7 +59,7 @@ button.secondary:hover { background: var(--text-muted); color: white; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 .spin-anim { animation: spin 0.5s ease-out; }
 
-.tabs { display: flex; gap: 10px; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
+.tabs { display: flex; gap: 10px; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; white-space: nowrap; }
 .tabs button { background: transparent; color: var(--text-muted); padding: 0.5rem 1rem; box-shadow: none; }
 .tabs button.active { color: var(--accent); background: rgba(59, 130, 246, 0.1); }
 
@@ -75,7 +75,6 @@ button.secondary:hover { background: var(--text-muted); color: white; }
 .resource-card { background: var(--card-solid); padding: 1.25rem; margin-bottom: 1rem; border-radius: 12px; border: 1px solid var(--border-color); border-left: 5px solid var(--accent); transition: 0.2s; }
 .resource-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 .resource-card h4 { margin: 0 0 0.5rem 0; }
-.resource-card a { color: var(--accent); font-weight: 600; text-decoration: none; }
 #upload-box { background: var(--input-bg); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px dashed var(--border-color); }
 input[type="file"] { padding: 0.5rem; background: var(--card-solid); cursor: pointer; margin-bottom: 1rem;}
 input[type="file"]::file-selector-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: 600; transition: 0.2s; }
