@@ -254,24 +254,40 @@ resourceList.addEventListener('click', async (e) => {
 
 // --- ADMIN PANEL CONTROLS ---
 document.getElementById('toggle-maintenance-btn').addEventListener('click', async () => {
-    const newStatus = !systemSettings.maintenanceMode;
-    await updateDoc(doc(db, "settings", "system"), { maintenanceMode: newStatus });
+    try {
+        const newStatus = !systemSettings.maintenanceMode;
+        // Using setDoc with merge:true forces Firebase to create the document if it's missing!
+        await setDoc(doc(db, "settings", "system"), { maintenanceMode: newStatus }, { merge: true });
+    } catch (error) {
+        console.error("Maintenance Error:", error);
+        alert("Action failed! Error: " + error.message);
+    }
 });
 
 document.getElementById('add-category-btn').addEventListener('click', async () => {
-    const input = document.getElementById('new-category-input');
-    const newCat = input.value.trim();
-    if (newCat) {
-        await updateDoc(doc(db, "settings", "system"), { categories: arrayUnion(newCat) });
-        input.value = '';
+    try {
+        const input = document.getElementById('new-category-input');
+        const newCat = input.value.trim();
+        if (newCat) {
+            await setDoc(doc(db, "settings", "system"), { categories: arrayUnion(newCat) }, { merge: true });
+            input.value = '';
+        }
+    } catch (error) {
+        console.error("Category Error:", error);
+        alert("Failed to add category! Error: " + error.message);
     }
 });
 
 document.getElementById('admin-category-list').addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-cat-btn')) {
-        const cat = e.target.getAttribute('data-cat');
-        if(confirm(`Remove category "${cat}"?`)) {
-            await updateDoc(doc(db, "settings", "system"), { categories: arrayRemove(cat) });
+        try {
+            const cat = e.target.getAttribute('data-cat');
+            if(confirm(`Remove category "${cat}"?`)) {
+                await updateDoc(doc(db, "settings", "system"), { categories: arrayRemove(cat) });
+            }
+        } catch (error) {
+            console.error("Delete Category Error:", error);
+            alert("Failed to delete category! Error: " + error.message);
         }
     }
 });
