@@ -496,7 +496,7 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
         progressDiv.classList.remove('hidden'); document.getElementById('progress-text').innerText = "Uploading to cloud...";
 
         const cloudName = "aqqngm6u"; 
-        const uploadPreset = "YOUR_UPLOAD_PRESET"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
+        const uploadPreset = "class_hub_preset"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
 
         const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", uploadPreset);
 
