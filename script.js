@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc, deleteDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// Your Firebase Config
+// TODO: Paste your Firebase Config here!
 const firebaseConfig = {
     apiKey: "AIzaSyC4nP0HVlsAr7Rg1NxwJJkiD2sKNSGHgJc",
     authDomain: "class-resource-hub-fed71.firebaseapp.com",
@@ -17,7 +17,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// DOM Elements
 const loadingScreen = document.getElementById('loading-screen');
 const authSection = document.getElementById('auth-section');
 const onboardingSection = document.getElementById('onboarding-section');
@@ -35,7 +34,6 @@ let currentUserData = null;
 let pendingUserAuth = null; 
 let profileListener = null;
 
-// --- THEME TOGGLE ---
 const themeToggle = document.getElementById('theme-toggle');
 if (localStorage.getItem('theme') === 'dark') {
     document.body.classList.add('dark-theme');
@@ -44,11 +42,9 @@ if (localStorage.getItem('theme') === 'dark') {
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     if (document.body.classList.contains('dark-theme')) {
-        localStorage.setItem('theme', 'dark');
-        themeToggle.textContent = '☀️';
+        localStorage.setItem('theme', 'dark'); themeToggle.textContent = '☀️';
     } else {
-        localStorage.setItem('theme', 'light');
-        themeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light'); themeToggle.textContent = '🌙';
     }
 });
 
@@ -60,7 +56,6 @@ function hideAllSections() {
     dashboardSection.classList.add('hidden');
 }
 
-// --- AUTH STATE & REAL-TIME LISTENER ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         profileListener = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
@@ -89,20 +84,29 @@ onAuthStateChanged(auth, (user) => {
     } else {
         if (profileListener) profileListener(); 
         hideAllSections();
-        authSection.classList.remove('hidden'); // Shows Google Login
+        authSection.classList.remove('hidden'); 
         userInfo.innerHTML = '';
         currentUserData = null;
     }
 });
 
-// Profile Setup Request
 document.getElementById('save-profile-btn').addEventListener('click', async () => {
     const name = document.getElementById('profile-name').value;
     const username = document.getElementById('profile-username').value;
-    const classSec = document.getElementById('profile-class').value;
+    const grade = document.getElementById('profile-grade').value;
+    const section = document.getElementById('profile-section').value;
 
-    if (name && username && classSec && pendingUserAuth) {
-        const newUserData = { email: pendingUserAuth.email, name, username, classSection: classSec, role: "student", canUpload: false, isBanned: false, status: "pending" };
+    if (name && username && grade && section && pendingUserAuth) {
+        const newUserData = { 
+            email: pendingUserAuth.email, 
+            name, username, 
+            classSection: `Class ${grade} ${section}`, // Formatted properly
+            accessGrades: [grade], // Array to allow dual access later!
+            role: "student", 
+            canUpload: false, 
+            isBanned: false, 
+            status: "pending" 
+        };
         await setDoc(doc(db, "users", pendingUserAuth.uid), newUserData);
     } else {
         alert("Please fill in all profile fields to request access.");
@@ -111,7 +115,6 @@ document.getElementById('save-profile-btn').addEventListener('click', async () =
 
 document.getElementById('logout-pending-btn').addEventListener('click', () => signOut(auth));
 
-// --- DASHBOARD SETUP WITH LOCAL STORAGE FIX ---
 function setupDashboard() {
     dashboardSection.classList.remove('hidden');
     
@@ -120,8 +123,7 @@ function setupDashboard() {
         <button id="logout-btn" class="secondary" style="margin-left:10px; padding: 0.4rem 0.8rem;">Logout</button>
     `;
     document.getElementById('logout-btn').addEventListener('click', () => {
-        localStorage.removeItem('activeTab'); // clear memory on logout
-        signOut(auth);
+        localStorage.removeItem('activeTab'); signOut(auth);
     });
 
     if (currentUserData.role === 'admin' || currentUserData.canUpload === true) {
@@ -135,24 +137,18 @@ function setupDashboard() {
         loadAdminPanel(); 
     }
     
-    // Check browser memory for last open tab
     const savedTab = localStorage.getItem('activeTab');
     if (savedTab === 'admin' && currentUserData.role === 'admin') {
-        document.getElementById('admin-view').classList.remove('hidden');
-        document.getElementById('feed-view').classList.add('hidden');
-        adminTab.classList.add('active');
-        document.getElementById('tab-feed').classList.remove('active');
+        document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
+        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active');
     } else {
-        document.getElementById('feed-view').classList.remove('hidden');
-        document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-feed').classList.add('active');
-        adminTab.classList.remove('active');
+        document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('tab-feed').classList.add('active'); adminTab.classList.remove('active');
     }
     
     loadResources();
 }
 
-// --- LOAD RESOURCES ---
 let resourcesUnsubscribe = null;
 function loadResources() {
     if (resourcesUnsubscribe) resourcesUnsubscribe();
@@ -160,21 +156,39 @@ function loadResources() {
         resourceList.innerHTML = '';
         snapshot.forEach((firestoreDoc) => {
             const data = firestoreDoc.data();
-            let deleteBtnHtml = '';
-            if (currentUserData && (currentUserData.username === data.uploadedByUsername || currentUserData.role === 'admin')) {
-                deleteBtnHtml = `<button class="delete-btn" data-id="${firestoreDoc.id}" style="background: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-top: 15px;">Delete</button>`;
+            const target = data.targetGrade || "both"; // For backwards compatibility
+            const userGrades = currentUserData.accessGrades || [];
+            
+            // SMART FILTER: Only show if user has access to this grade, OR if resource is for both, OR if user is admin
+            let hasAccess = false;
+            if (currentUserData.role === 'admin' || target === 'both' || userGrades.includes(target)) {
+                hasAccess = true;
             }
 
-            resourceList.innerHTML += `
-                <div class="resource-card" style="animation-delay: 0.1s;">
-                    <h4>${data.title}</h4>
-                    <a href="${data.url}" target="_blank">View Resource</a>
-                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
-                        Shared by: <strong>@${data.uploadedByUsername}</strong> | ${data.uploadedByClass}
-                    </p>
-                    ${deleteBtnHtml}
-                </div>
-            `;
+            if (hasAccess) {
+                // Generate color-coded badge
+                let badgeHtml = '';
+                if (target === '11') badgeHtml = `<span class="badge class-11">Class 11</span>`;
+                else if (target === '12') badgeHtml = `<span class="badge class-12">Class 12</span>`;
+                else badgeHtml = `<span class="badge class-both">Class 11 & 12</span>`;
+
+                let deleteBtnHtml = '';
+                if (currentUserData && (currentUserData.username === data.uploadedByUsername || currentUserData.role === 'admin')) {
+                    deleteBtnHtml = `<button class="delete-btn" data-id="${firestoreDoc.id}" style="background: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-top: 15px;">Delete</button>`;
+                }
+
+                resourceList.innerHTML += `
+                    <div class="resource-card" style="animation-delay: 0.1s;">
+                        ${badgeHtml}
+                        <h4>${data.title}</h4>
+                        <a href="${data.url}" target="_blank">View Resource</a>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
+                            Shared by: <strong>@${data.uploadedByUsername}</strong> | ${data.uploadedByClass}
+                        </p>
+                        ${deleteBtnHtml}
+                    </div>
+                `;
+            }
         });
     });
 }
@@ -192,9 +206,7 @@ async function loadAdminPanel() {
     const usersSnapshot = await getDocs(collection(db, "users"));
     studentList.innerHTML = '';
     pendingList.innerHTML = '';
-    
-    let studentCount = 0;
-    let pendingCount = 0;
+    let studentCount = 0; let pendingCount = 0;
     
     usersSnapshot.forEach((userDoc) => {
         const user = userDoc.data();
@@ -207,7 +219,7 @@ async function loadAdminPanel() {
                     <div class="student-row" style="border-left: 4px solid #f59e0b;">
                         <div class="student-info">
                             <strong>${user.name} (@${user.username})</strong>
-                            <span>Class: ${user.classSection} | Email: ${user.email}</span>
+                            <span>${user.classSection} | Email: ${user.email}</span>
                         </div>
                         <div>
                             <button class="approve-btn" data-uid="${userId}">Approve</button>
@@ -221,14 +233,24 @@ async function loadAdminPanel() {
                 const accessBtnClass = isGranted ? 'access-granted' : '';
                 const accessBtnText = isGranted ? 'Revoke Upload' : 'Grant Upload';
 
+                // Setup dual-access toggle buttons
+                const userGrades = user.accessGrades || [];
+                const class11Active = userGrades.includes('11') ? 'access-granted' : '';
+                const class12Active = userGrades.includes('12') ? 'access-granted' : '';
+
                 studentList.innerHTML += `
                     <div class="student-row">
                         <div class="student-info">
                             <strong>${user.name} (@${user.username})</strong>
-                            <span>Class: ${user.classSection} | Email: ${user.email}</span>
+                            <span>${user.classSection} | Email: ${user.email}</span>
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color);">
+                                <span style="font-size: 0.8rem; font-weight:600; margin-right: 5px;">Feed Access:</span>
+                                <button class="access-btn grade-toggle ${class11Active}" data-uid="${userId}" data-grade="11" data-current='${JSON.stringify(userGrades)}'>11th</button>
+                                <button class="access-btn grade-toggle ${class12Active}" data-uid="${userId}" data-grade="12" data-current='${JSON.stringify(userGrades)}'>12th</button>
+                            </div>
                         </div>
-                        <div>
-                            <button class="access-btn ${accessBtnClass}" data-uid="${userId}" data-status="${isGranted}">${accessBtnText}</button>
+                        <div style="text-align: right;">
+                            <button class="access-btn upload-toggle ${accessBtnClass}" data-uid="${userId}" data-status="${isGranted}">${accessBtnText}</button>
                             <button class="ban-btn" data-uid="${userId}" data-banned="false">Ban</button>
                         </div>
                     </div>
@@ -239,7 +261,7 @@ async function loadAdminPanel() {
                 <div class="student-row student-banned">
                     <div class="student-info">
                         <strong>${user.name} (@${user.username}) <span style="color:var(--danger);">(BANNED)</span></strong>
-                        <span>Class: ${user.classSection} | Email: ${user.email}</span>
+                        <span>${user.classSection} | Email: ${user.email}</span>
                     </div>
                     <div>
                         <button class="access-btn" disabled style="opacity:0.5">Upload Revoked</button>
@@ -268,19 +290,40 @@ document.getElementById('admin-view').addEventListener('click', async (e) => {
         loadAdminPanel();
     }
 
-    if (e.target.classList.contains('access-btn') && !e.target.disabled) {
+    // Toggle Upload Access
+    if (e.target.classList.contains('upload-toggle') && !e.target.disabled) {
         const uid = e.target.getAttribute('data-uid');
         const currentStatus = e.target.getAttribute('data-status') === 'true';
         e.target.innerText = "Updating...";
         await updateDoc(doc(db, "users", uid), { canUpload: !currentStatus });
         loadAdminPanel();
     }
+
+    // Toggle 11th / 12th Grade Feed Access
+    if (e.target.classList.contains('grade-toggle')) {
+        const uid = e.target.getAttribute('data-uid');
+        const targetGrade = e.target.getAttribute('data-grade');
+        let currentGrades = JSON.parse(e.target.getAttribute('data-current'));
+        
+        if (currentGrades.includes(targetGrade)) {
+            // Remove grade (unless it's their only one, then warn them)
+            if (currentGrades.length === 1) { alert("A student must have access to at least one feed!"); return; }
+            currentGrades = currentGrades.filter(g => g !== targetGrade);
+        } else {
+            // Add grade
+            currentGrades.push(targetGrade);
+        }
+        
+        e.target.innerText = "...";
+        await updateDoc(doc(db, "users", uid), { accessGrades: currentGrades });
+        loadAdminPanel();
+    }
     
+    // Ban Logic
     if (e.target.classList.contains('ban-btn')) {
         const uid = e.target.getAttribute('data-uid');
         const currentBannedStatus = e.target.getAttribute('data-banned') === 'true';
         const confirmMsg = currentBannedStatus ? "Allow this student back into the portal?" : "Are you sure you want to ban this student?";
-            
         if (confirm(confirmMsg)) {
             e.target.innerText = "Updating...";
             await updateDoc(doc(db, "users", uid), { isBanned: !currentBannedStatus, canUpload: false, status: currentBannedStatus ? "approved" : "rejected" });
@@ -292,6 +335,7 @@ document.getElementById('admin-view').addEventListener('click', async (e) => {
 // --- CLOUDINARY UPLOAD LOGIC ---
 document.getElementById('upload-btn').addEventListener('click', async () => {
     const title = document.getElementById('resource-title').value;
+    const targetGrade = document.getElementById('resource-grade').value; // Get the selected target class
     const file = document.getElementById('resource-file').files[0];
     const uploadBtn = document.getElementById('upload-btn');
     const progressDiv = document.getElementById('upload-progress');
@@ -311,6 +355,7 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
             if (data.secure_url) {
                 await addDoc(collection(db, "resources"), {
                     title, url: data.secure_url, fileName: file.name,
+                    targetGrade: targetGrade, // Save who gets to see this
                     uploadedByUsername: currentUserData.username, uploadedByClass: currentUserData.classSection, timestamp: new Date()
                 });
                 document.getElementById('resource-title').value = ''; document.getElementById('resource-file').value = '';
@@ -323,27 +368,20 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
     } else alert("Please provide a title and select a file!");
 });
 
-// --- GOOGLE SIGN IN ONLY ---
 document.getElementById('google-btn').addEventListener('click', () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider).catch(err => console.error("Google Login Error:", err));
+    signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error("Google Login Error:", err));
 });
 
-// Switch Tabs (Now saving state to localStorage)
 document.getElementById('tab-feed').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'feed'); 
-    document.getElementById('feed-view').classList.remove('hidden'); 
-    document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); 
-    document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-admin').classList.remove('active');
 });
 
 document.getElementById('tab-admin').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'admin'); 
-    document.getElementById('admin-view').classList.remove('hidden'); 
-    document.getElementById('feed-view').classList.add('hidden');
-    e.target.classList.add('active'); 
-    document.getElementById('tab-feed').classList.remove('active');
+    document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active');
 });
 
 // ==========================================
@@ -351,80 +389,50 @@ document.getElementById('tab-admin').addEventListener('click', (e) => {
 // ==========================================
 const canvas = document.getElementById('chem-canvas');
 const ctx = canvas.getContext('2d');
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
 let particlesArray = [];
-const maxParticles = 60; // Adjust for density
-const connectionDistance = 150; // How close atoms need to be to draw a bond
+const maxParticles = 60; 
+const connectionDistance = 150; 
 
-window.addEventListener('resize', () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 
 class Particle {
     constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1; // Size of the atom
-        this.speedX = Math.random() * 1 - 0.5; // Drift speed
-        this.speedY = Math.random() * 1 - 0.5;
+        this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 3 + 1; 
+        this.speedX = Math.random() * 1 - 0.5; this.speedY = Math.random() * 1 - 0.5;
     }
-    
     update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
-        
-        // Bounce off edges
+        this.x += this.speedX; this.y += this.speedY;
         if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
         if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
     }
-    
     draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        const isDark = document.body.classList.contains('dark-theme');
-        ctx.fillStyle = isDark ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.4)';
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = document.body.classList.contains('dark-theme') ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.4)';
         ctx.fill();
     }
 }
 
-function init() {
-    particlesArray = [];
-    for (let i = 0; i < maxParticles; i++) {
-        particlesArray.push(new Particle());
-    }
-}
+function init() { particlesArray = []; for (let i = 0; i < maxParticles; i++) particlesArray.push(new Particle()); }
 
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const isDark = document.body.classList.contains('dark-theme');
-    const bondColor = isDark ? '96, 165, 250' : '59, 130, 246'; 
+    const bondColor = document.body.classList.contains('dark-theme') ? '96, 165, 250' : '59, 130, 246'; 
 
     for (let i = 0; i < particlesArray.length; i++) {
-        particlesArray[i].update();
-        particlesArray[i].draw();
-        
+        particlesArray[i].update(); particlesArray[i].draw();
         for (let j = i; j < particlesArray.length; j++) {
-            const dx = particlesArray[i].x - particlesArray[j].x;
-            const dy = particlesArray[i].y - particlesArray[j].y;
+            const dx = particlesArray[i].x - particlesArray[j].x; const dy = particlesArray[i].y - particlesArray[j].y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            
             if (distance < connectionDistance) {
                 const opacity = 1 - (distance / connectionDistance);
-                ctx.beginPath();
-                ctx.strokeStyle = `rgba(${bondColor}, ${opacity * 0.5})`; 
-                ctx.lineWidth = 1;
-                ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
-                ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
-                ctx.stroke();
+                ctx.beginPath(); ctx.strokeStyle = `rgba(${bondColor}, ${opacity * 0.5})`; 
+                ctx.lineWidth = 1; ctx.moveTo(particlesArray[i].x, particlesArray[i].y); ctx.lineTo(particlesArray[j].x, particlesArray[j].y); ctx.stroke();
             }
         }
     }
     requestAnimationFrame(animate);
 }
-
-init();
-animate();
+init(); animate();
