@@ -38,7 +38,7 @@ header h1 { margin: 0; font-size: 1.5rem; background: linear-gradient(135deg, #3
 
 main { max-width: 800px; width: 90%; margin: 2rem auto; background: var(--card-bg); backdrop-filter: blur(16px); padding: 2.5rem; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.2); position: relative; }
 
-.hidden { display: none !important; }
+.hidden { display: none !important; opacity: 0; pointer-events: none; }
 h2, h3, h4 { color: var(--text-main); margin-top: 0; }
 p { color: var(--text-muted); }
 
@@ -53,6 +53,8 @@ button.secondary:hover { background: var(--text-muted); color: white; }
 .icon-btn:hover { background: transparent; transform: scale(1.1); box-shadow: none; }
 #google-btn { background: #ea4335; max-width: 300px; margin: 0 auto; display: block; font-size: 1.1rem; padding: 1rem; }
 #google-btn:hover { background: #d62d20; box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3); }
+.btn-gradient { background: linear-gradient(135deg, #3b82f6, #8b5cf6); width: 100%; font-size: 1rem; padding: 1rem; border-radius: 12px; }
+.btn-gradient:hover { background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 8px 16px rgba(139, 92, 246, 0.3); }
 
 @keyframes spin { 100% { transform: rotate(360deg); } }
 .spin-anim { animation: spin 0.5s ease-out; }
@@ -75,6 +77,43 @@ button.secondary:hover { background: var(--text-muted); color: white; }
 input[type="file"] { padding: 0.5rem; background: var(--card-solid); cursor: pointer; margin-bottom: 1rem;}
 input[type="file"]::file-selector-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: 600; transition: 0.2s; }
 input[type="file"]::file-selector-button:hover { background: var(--accent-hover); }
+
+/* --- PREMIUM SIDE DRAWERS (Replaces Modals) --- */
+#drawer-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.5); z-index: 999; backdrop-filter: blur(5px);
+    transition: opacity 0.3s ease;
+}
+
+.drawer {
+    position: fixed; top: 0; right: -100%; width: 100%; max-width: 450px; height: 100vh;
+    background: var(--card-solid); z-index: 1000;
+    box-shadow: -10px 0 40px rgba(0,0,0,0.15); border-left: 1px solid var(--border-color);
+    display: flex; flex-direction: column; overflow-y: auto;
+    /* Springy fun animation */
+    transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1); 
+}
+.drawer.open { right: 0; }
+
+.drawer-header {
+    padding: 2rem 2rem 1.5rem; border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--card-bg); position: sticky; top: 0; z-index: 10;
+}
+.drawer-body { padding: 2rem; flex: 1; display: flex; flex-direction: column; gap: 1.5rem; }
+.drawer-footer {
+    padding: 1.5rem 2rem; border-top: 1px solid var(--border-color);
+    background: var(--card-bg); position: sticky; bottom: 0;
+}
+
+.close-drawer-btn {
+    background: transparent; border: none; color: var(--text-muted); font-size: 2rem;
+    cursor: pointer; padding: 0; transition: transform 0.2s, color 0.2s; line-height: 1;
+}
+.close-drawer-btn:hover { transform: rotate(90deg) scale(1.2); color: var(--danger); box-shadow: none; background: transparent; }
+
+.input-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
+.input-group input, .input-group select { margin-bottom: 0; }
 
 .admin-settings-box { background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; }
 .settings-row { display: flex; justify-content: space-between; align-items: center; }
@@ -104,10 +143,6 @@ input[type="file"]::file-selector-button:hover { background: var(--accent-hover)
 .ban-btn.unban:hover { background: #4b5563; }
 .student-banned { opacity: 0.5; border-color: var(--danger); }
 
-/* --- MODAL STYLES --- */
-#modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 999; backdrop-filter: blur(5px); }
-.modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card-bg); padding: 2rem; border-radius: 12px; z-index: 1000; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
-
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in { animation: slideUp 0.4s ease-out forwards; }
 .resource-card { animation: slideUp 0.3s ease-out forwards; }
@@ -119,4 +154,5 @@ input[type="file"]::file-selector-button:hover { background: var(--accent-hover)
     .student-row div { width: 100%; display: flex; flex-wrap: wrap; gap: 5px; }
     .student-row button { flex: 1; margin: 0; }
     .admin-header { flex-direction: column; gap: 10px; }
+    .drawer { max-width: 100%; } /* Drawers take full width on phone */
 }
