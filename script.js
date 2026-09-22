@@ -106,7 +106,7 @@ function updateCategoryUI() {
     filterSelect.value = currentFilter; 
 }
 
-// --- PROFILE SETTINGS & MODALS ---
+// --- PROFILE SETTINGS ---
 document.getElementById('save-profile-btn').addEventListener('click', async () => {
     const name = document.getElementById('profile-name').value; const username = document.getElementById('profile-username').value;
     const grade = document.getElementById('profile-grade').value; const section = document.getElementById('profile-section').value;
@@ -116,14 +116,15 @@ document.getElementById('save-profile-btn').addEventListener('click', async () =
     } else alert("Please fill in all profile fields.");
 });
 
-function closeModals() {
-    document.getElementById('modal-overlay').classList.add('hidden');
-    document.getElementById('profile-modal').classList.add('hidden');
-    document.getElementById('resource-modal').classList.add('hidden');
+// --- SIDE DRAWERS (MODALS) ---
+function closeDrawers() {
+    document.getElementById('drawer-overlay').classList.add('hidden');
+    document.getElementById('profile-drawer').classList.remove('open');
+    document.getElementById('resource-drawer').classList.remove('open');
 }
 
-document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', closeModals));
-document.getElementById('modal-overlay').addEventListener('click', closeModals);
+document.querySelectorAll('.close-drawer-btn').forEach(btn => btn.addEventListener('click', closeDrawers));
+document.getElementById('drawer-overlay').addEventListener('click', closeDrawers);
 
 // Submit Profile Edit
 document.getElementById('submit-profile-edit').addEventListener('click', async () => {
@@ -133,11 +134,8 @@ document.getElementById('submit-profile-edit').addEventListener('click', async (
     const newSection = document.getElementById('edit-section').value.trim();
     const newClassSection = `Class ${newGrade} ${newSection}`;
     
-    let updates = {};
-    let requiresApproval = false;
-
+    let updates = {}; let requiresApproval = false;
     if (newUsername !== currentUserData.username && newUsername !== "") updates.username = newUsername;
-    
     if (newName !== currentUserData.name || newClassSection !== currentUserData.classSection) {
         updates.pendingUpdate = { name: newName, grade: newGrade, section: newSection, classSection: newClassSection };
         requiresApproval = true;
@@ -147,14 +145,13 @@ document.getElementById('submit-profile-edit').addEventListener('click', async (
         await updateDoc(doc(db, "users", auth.currentUser.uid), updates);
         alert(requiresApproval ? "Username updated! Name/Class changes sent to Admin for approval." : "Profile updated successfully!");
     }
-    closeModals();
+    closeDrawers();
 });
 
 // --- DASHBOARD SETUP ---
 function setupDashboard() {
     hideAllSections(); dashboardSection.classList.remove('hidden');
     
-    // User Info Panel with Settings Gear
     userInfo.innerHTML = `
         <span style="font-weight:600;">@${currentUserData.username}</span> 
         <button id="profile-settings-btn" class="icon-btn" style="font-size: 1.1rem; padding: 0 5px;" title="Profile Settings">⚙️</button>
@@ -163,14 +160,14 @@ function setupDashboard() {
     
     document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('activeTab'); signOut(auth); });
     
-    // Open Profile Settings Modal
+    // Open Profile Drawer
     document.getElementById('profile-settings-btn').addEventListener('click', () => {
         document.getElementById('edit-username').value = currentUserData.username;
         document.getElementById('edit-name').value = currentUserData.name;
         const match = currentUserData.classSection.match(/Class (\d+) (.*)/);
         if (match) { document.getElementById('edit-grade').value = match[1]; document.getElementById('edit-section').value = match[2]; }
-        document.getElementById('modal-overlay').classList.remove('hidden');
-        document.getElementById('profile-modal').classList.remove('hidden');
+        document.getElementById('drawer-overlay').classList.remove('hidden');
+        document.getElementById('profile-drawer').classList.add('open');
     });
 
     if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden'); else uploadBox.classList.add('hidden');
@@ -252,8 +249,9 @@ resourceList.addEventListener('click', async (e) => {
         document.getElementById('edit-resource-grade').value = e.target.getAttribute('data-grade');
         document.getElementById('edit-resource-category').value = e.target.getAttribute('data-category');
         
-        document.getElementById('modal-overlay').classList.remove('hidden');
-        document.getElementById('resource-modal').classList.remove('hidden');
+        // Open Resource Drawer
+        document.getElementById('drawer-overlay').classList.remove('hidden');
+        document.getElementById('resource-drawer').classList.add('open');
     }
 });
 
@@ -263,10 +261,9 @@ document.getElementById('submit-resource-edit').addEventListener('click', async 
     const newTitle = document.getElementById('edit-resource-title').value;
     const newGrade = document.getElementById('edit-resource-grade').value;
     const newCategory = document.getElementById('edit-resource-category').value;
-    
     if (newTitle) {
         await updateDoc(doc(db, "resources", docId), { title: newTitle, targetGrade: newGrade, category: newCategory });
-        closeModals();
+        closeDrawers();
     }
 });
 
@@ -308,12 +305,10 @@ async function loadAdminPanel() {
                     </div>`;
             } else if (user.status === "approved") {
                 studentCount++;
-                const isGranted = user.canUpload;
-                const userGrades = user.accessGrades || [];
+                const isGranted = user.canUpload; const userGrades = user.accessGrades || [];
                 const class11Active = userGrades.includes('11') ? 'access-granted' : '';
                 const class12Active = userGrades.includes('12') ? 'access-granted' : '';
                 
-                // Show Pending Profile Edit Request if exists
                 let pendingEditHtml = '';
                 if (user.pendingUpdate) {
                     pendingEditHtml = `
@@ -358,27 +353,18 @@ async function loadAdminPanel() {
     if (pendingCount > 0) pendingRequestsContainer.classList.remove('hidden'); else pendingRequestsContainer.classList.add('hidden');
 }
 
-// Student Action Buttons (Including new Profile Request Handlers)
+// Student Action Buttons
 document.getElementById('admin-view').addEventListener('click', async (e) => {
-    // Approve/Deny Profile Edit Request
     if (e.target.classList.contains('approve-profile-btn')) {
-        const uid = e.target.getAttribute('data-uid');
-        const userDoc = await getDoc(doc(db, "users", uid));
-        const pending = userDoc.data().pendingUpdate;
+        const uid = e.target.getAttribute('data-uid'); const userDoc = await getDoc(doc(db, "users", uid)); const pending = userDoc.data().pendingUpdate;
         e.target.innerText = "Updating...";
-        await updateDoc(doc(db, "users", uid), {
-            name: pending.name, classSection: pending.classSection,
-            accessGrades: arrayUnion(pending.grade), // Ensure they get feed access to their new grade
-            pendingUpdate: deleteField() // Remove the request box
-        });
+        await updateDoc(doc(db, "users", uid), { name: pending.name, classSection: pending.classSection, accessGrades: arrayUnion(pending.grade), pendingUpdate: deleteField() });
         loadAdminPanel();
     }
     if (e.target.classList.contains('deny-profile-btn')) {
         const uid = e.target.getAttribute('data-uid'); e.target.innerText = "Denying...";
         await updateDoc(doc(db, "users", uid), { pendingUpdate: deleteField() }); loadAdminPanel();
     }
-    
-    // Existing Admin Controls
     if (e.target.classList.contains('approve-btn')) { e.target.innerText = "..."; await updateDoc(doc(db, "users", e.target.getAttribute('data-uid')), { status: "approved" }); loadAdminPanel(); }
     if (e.target.classList.contains('deny-btn')) { e.target.innerText = "..."; await updateDoc(doc(db, "users", e.target.getAttribute('data-uid')), { isBanned: true }); loadAdminPanel(); }
     if (e.target.classList.contains('upload-toggle') && !e.target.disabled) {
@@ -443,7 +429,6 @@ document.getElementById('tab-feed').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'feed'); document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
     e.target.classList.add('active'); document.getElementById('tab-admin').classList.remove('active');
 });
-
 document.getElementById('tab-admin').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'admin'); document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
     e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active');
