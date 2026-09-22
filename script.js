@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc, deleteDoc, getDocs, updateDoc, arrayUnion, arrayRemove, deleteField } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc, deleteDoc, getDocs, updateDoc, arrayUnion, arrayRemove, deleteField, increment } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 // TODO: Paste your Firebase Config here!
 const firebaseConfig = {
@@ -37,15 +37,11 @@ let profileListener = null;
 let settingsListener = null;
 let systemSettings = { maintenanceMode: false, categories: ["Physics", "Chemistry", "Math", "General"] };
 let currentFilter = "all";
-let currentFeedType = "standard"; // 'standard' or 'competitive'
+let currentFeedType = "standard"; // 'standard', 'competitive', or 'bookmarks'
 
 // --- THEME TOGGLE (Defaults to Dark) ---
 const themeToggle = document.getElementById('theme-toggle');
-if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.remove('dark-theme'); themeToggle.textContent = '🌙';
-} else {
-    localStorage.setItem('theme', 'dark'); themeToggle.textContent = '☀️';
-}
+if (localStorage.getItem('theme') === 'light') { document.body.classList.remove('dark-theme'); themeToggle.textContent = '🌙'; }
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     if (document.body.classList.contains('dark-theme')) { localStorage.setItem('theme', 'dark'); themeToggle.textContent = '☀️'; } 
@@ -103,10 +99,8 @@ function updateCategoryUI() {
     editSelect.innerHTML = ''; adminCatList.innerHTML = '';
 
     systemSettings.categories.forEach(cat => {
-        uploadSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        editSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        adminCatList.innerHTML += `<div class="admin-cat-tag">${cat} <button class="delete-cat-btn" data-cat="${cat}">×</button></div>`;
+        uploadSelect.innerHTML += `<option value="${cat}">${cat}</option>`; filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        editSelect.innerHTML += `<option value="${cat}">${cat}</option>`; adminCatList.innerHTML += `<div class="admin-cat-tag">${cat} <button class="delete-cat-btn" data-cat="${cat}">×</button></div>`;
     });
     filterSelect.value = currentFilter; 
 }
@@ -116,7 +110,7 @@ document.getElementById('save-profile-btn').addEventListener('click', async () =
     const name = document.getElementById('profile-name').value; const username = document.getElementById('profile-username').value;
     const grade = document.getElementById('profile-grade').value; const section = document.getElementById('profile-section').value;
     if (name && username && grade && section && pendingUserAuth) {
-        const newUserData = { email: pendingUserAuth.email, name, username, classSection: `Class ${grade} ${section}`, accessGrades: [grade], role: "student", canUpload: false, isBanned: false, status: "pending" };
+        const newUserData = { email: pendingUserAuth.email, name, username, classSection: `Class ${grade} ${section}`, accessGrades: [grade], role: "student", canUpload: false, isBanned: false, status: "pending", savedResources: [] };
         await setDoc(doc(db, "users", pendingUserAuth.uid), newUserData);
     } else alert("Please fill in all profile fields.");
 });
@@ -131,17 +125,14 @@ document.querySelectorAll('.close-drawer-btn').forEach(btn => btn.addEventListen
 document.getElementById('drawer-overlay').addEventListener('click', closeDrawers);
 
 document.getElementById('submit-profile-edit').addEventListener('click', async () => {
-    const newUsername = document.getElementById('edit-username').value.trim();
-    const newName = document.getElementById('edit-name').value.trim();
-    const newGrade = document.getElementById('edit-grade').value;
-    const newSection = document.getElementById('edit-section').value.trim();
+    const newUsername = document.getElementById('edit-username').value.trim(); const newName = document.getElementById('edit-name').value.trim();
+    const newGrade = document.getElementById('edit-grade').value; const newSection = document.getElementById('edit-section').value.trim();
     const newClassSection = `Class ${newGrade} ${newSection}`;
     
     let updates = {}; let requiresApproval = false;
     if (newUsername !== currentUserData.username && newUsername !== "") updates.username = newUsername;
     if (newName !== currentUserData.name || newClassSection !== currentUserData.classSection) {
-        updates.pendingUpdate = { name: newName, grade: newGrade, section: newSection, classSection: newClassSection };
-        requiresApproval = true;
+        updates.pendingUpdate = { name: newName, grade: newGrade, section: newSection, classSection: newClassSection }; requiresApproval = true;
     }
     
     if (Object.keys(updates).length > 0) {
@@ -160,7 +151,6 @@ function setupDashboard() {
         <button id="profile-settings-btn" class="icon-btn" style="font-size: 1.1rem; padding: 0 5px;" title="Profile Settings">⚙️</button>
         <button id="logout-btn" class="secondary" style="margin-left:10px; padding: 0.4rem 0.8rem;">Logout</button>
     `;
-    
     document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('activeTab'); signOut(auth); });
     
     document.getElementById('profile-settings-btn').addEventListener('click', () => {
@@ -168,8 +158,7 @@ function setupDashboard() {
         document.getElementById('edit-name').value = currentUserData.name;
         const match = currentUserData.classSection.match(/Class (\d+) (.*)/);
         if (match) { document.getElementById('edit-grade').value = match[1]; document.getElementById('edit-section').value = match[2]; }
-        document.getElementById('drawer-overlay').classList.remove('hidden');
-        document.getElementById('profile-drawer').classList.add('open');
+        document.getElementById('drawer-overlay').classList.remove('hidden'); document.getElementById('profile-drawer').classList.add('open');
     });
 
     if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden'); else uploadBox.classList.add('hidden');
@@ -179,16 +168,18 @@ function setupDashboard() {
     
     if (savedTab === 'admin' && currentUserData.role === 'admin') {
         document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active');
+        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active');
     } else if (savedTab === 'competitive') {
-        currentFeedType = 'competitive';
-        document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-competitive').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); adminTab.classList.remove('active');
-        document.getElementById('feed-title').innerText = "Competitive Prep (BITSAT/JEE)";
+        currentFeedType = 'competitive'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('tab-competitive').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); adminTab.classList.remove('active');
+        document.getElementById('feed-title').innerText = "Competitive Prep (NEET/JEE)";
+    } else if (savedTab === 'bookmarks') {
+        currentFeedType = 'bookmarks'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('tab-bookmarks').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); adminTab.classList.remove('active');
+        document.getElementById('feed-title').innerText = "My Saved Notes"; uploadBox.classList.add('hidden'); // Hide upload when viewing bookmarks
     } else {
-        currentFeedType = 'standard';
-        document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-feed').classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); adminTab.classList.remove('active');
+        currentFeedType = 'standard'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('tab-feed').classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); adminTab.classList.remove('active');
         document.getElementById('feed-title').innerText = "Class Resources";
     }
     loadResources();
@@ -198,28 +189,39 @@ function setupDashboard() {
 document.getElementById('tab-feed').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'feed'); currentFeedType = 'standard';
     document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
-    document.getElementById('feed-title').innerText = "Class Resources"; loadResources();
+    e.target.classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-title').innerText = "Class Resources"; 
+    if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden');
+    loadResources();
 });
 
 document.getElementById('tab-competitive').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'competitive'); currentFeedType = 'competitive';
     document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
-    document.getElementById('feed-title').innerText = "Competitive Prep (BITSAT/JEE)"; loadResources();
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-title').innerText = "Competitive Prep (NEET/JEE)"; 
+    if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden');
+    loadResources();
+});
+
+document.getElementById('tab-bookmarks').addEventListener('click', (e) => {
+    localStorage.setItem('activeTab', 'bookmarks'); currentFeedType = 'bookmarks';
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-title').innerText = "My Saved Notes"; uploadBox.classList.add('hidden'); 
+    loadResources();
 });
 
 document.getElementById('tab-admin').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'admin'); 
     document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active');
 });
 
 // --- FEED & REAL-TIME SEARCH ---
 document.getElementById('feed-filter').addEventListener('change', (e) => { currentFilter = e.target.value; loadResources(); });
 document.getElementById('refresh-feed-btn').addEventListener('click', (e) => {
-    const btn = e.currentTarget; btn.classList.add('spin-anim');
-    setTimeout(() => btn.classList.remove('spin-anim'), 500); loadResources(); 
+    const btn = e.currentTarget; btn.classList.add('spin-anim'); setTimeout(() => btn.classList.remove('spin-anim'), 500); loadResources(); 
 });
 document.getElementById('search-bar').addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase(); const cards = document.querySelectorAll('.resource-card');
@@ -238,18 +240,27 @@ function loadResources() {
         
         snapshot.forEach((firestoreDoc) => {
             const data = firestoreDoc.data();
+            const docId = firestoreDoc.id;
             const target = data.targetGrade || "both"; 
             const category = data.category || "General";
-            const type = data.type || "standard"; // Default to standard if old
+            const type = data.type || "standard"; 
             const userGrades = currentUserData.accessGrades || [];
+            const savedList = currentUserData.savedResources || [];
             
             // SMART FILTERS
             let hasAccess = false;
-            if (currentUserData.role === 'admin' || target === 'both' || userGrades.includes(target)) hasAccess = true;
-            if (currentFilter !== "all" && category !== currentFilter) hasAccess = false;
             
-            // Strict check: Only show competitive notes in competitive tab, standard in standard tab
-            if (type !== currentFeedType) hasAccess = false;
+            if (currentFeedType === 'bookmarks') {
+                // In bookmarks tab, only show if they saved it
+                if (savedList.includes(docId)) hasAccess = true;
+            } else {
+                // In standard/competitive tabs, check grade access and match tab type
+                if (currentUserData.role === 'admin' || target === 'both' || userGrades.includes(target)) hasAccess = true;
+                if (type !== currentFeedType) hasAccess = false;
+            }
+            
+            // Apply category dropdown filter
+            if (currentFilter !== "all" && category !== currentFilter) hasAccess = false;
 
             if (hasAccess) {
                 let badgeHtml = '';
@@ -258,17 +269,27 @@ function loadResources() {
                 else badgeHtml = `<span class="badge class-both">Class 11 & 12</span>`;
                 
                 let compBadgeHtml = '';
-                if (type === 'competitive') compBadgeHtml = `<span class="badge competitive">🔥 BITSAT/JEE</span>`;
+                if (type === 'competitive') compBadgeHtml = `<span class="badge competitive">🔥 NEET/JEE</span>`;
 
                 let actionBtnsHtml = '';
                 if (currentUserData && (currentUserData.username === data.uploadedByUsername || currentUserData.role === 'admin')) {
                     actionBtnsHtml = `
                         <div style="margin-top: 15px;">
-                            <button class="edit-resource-btn" data-id="${firestoreDoc.id}" data-title="${data.title}" data-grade="${target}" data-category="${category}" data-type="${type}" style="background: #f59e0b; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-right: 5px;">Edit</button>
-                            <button class="delete-btn" data-id="${firestoreDoc.id}" style="background: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem;">Delete</button>
+                            <button class="edit-resource-btn" data-id="${docId}" data-title="${data.title}" data-grade="${target}" data-category="${category}" data-type="${type}" style="background: #f59e0b; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-right: 5px;">Edit</button>
+                            <button class="delete-btn" data-id="${docId}" style="background: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem;">Delete</button>
                         </div>
                     `;
                 }
+                
+                // SAVE BUTTON LOGIC
+                const isSaved = savedList.includes(docId);
+                const saveBtnText = isSaved ? '🌟 Saved' : '⭐ Save';
+                const saveBtnStyle = isSaved 
+                    ? 'background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b;' 
+                    : 'background: transparent; border: 1px solid var(--border-color); color: var(--text-muted);';
+                
+                const saveHtml = `<button class="save-btn" data-id="${docId}" style="${saveBtnStyle} padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: 8px; font-weight: 600;">${saveBtnText}</button>`;
+                const savesCount = data.saves || 0;
                 
                 const displayStyle = data.title.toLowerCase().includes(currentSearch) ? 'block' : 'none';
 
@@ -276,8 +297,12 @@ function loadResources() {
                     <div class="resource-card" style="animation-delay: 0.1s; display: ${displayStyle};">
                         ${compBadgeHtml} ${badgeHtml} <span class="badge category">${category}</span>
                         <h4>${data.title}</h4>
-                        <a href="${data.url}" target="_blank">View Resource</a>
-                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                            <a href="${data.url}" target="_blank" class="btn-gradient" style="padding: 0.4rem 1rem; color: white; text-align: center; text-decoration: none; border-radius: 8px; font-size: 0.9rem; font-weight: 600; flex: 1; max-width: 150px;">View Resource</a>
+                            ${saveHtml}
+                            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">${savesCount} Saves</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 15px; margin-bottom: 0;">
                             Shared by: <strong>@${data.uploadedByUsername}</strong> | ${data.uploadedByClass}
                         </p>
                         ${actionBtnsHtml}
@@ -288,20 +313,40 @@ function loadResources() {
     });
 }
 
-// Handle Edit/Delete Clicks
+// Handle All Card Clicks (Delete, Edit, Save)
 resourceList.addEventListener('click', async (e) => {
+    const docId = e.target.getAttribute('data-id');
+    
+    // Delete
     if (e.target.classList.contains('delete-btn')) {
-        if (confirm("Are you sure you want to delete this resource?")) await deleteDoc(doc(db, "resources", e.target.getAttribute('data-id')));
+        if (confirm("Are you sure you want to delete this resource?")) await deleteDoc(doc(db, "resources", docId));
     }
+    
+    // Edit
     if (e.target.classList.contains('edit-resource-btn')) {
-        document.getElementById('edit-resource-id').value = e.target.getAttribute('data-id');
+        document.getElementById('edit-resource-id').value = docId;
         document.getElementById('edit-resource-title').value = e.target.getAttribute('data-title');
         document.getElementById('edit-resource-type').value = e.target.getAttribute('data-type');
         document.getElementById('edit-resource-grade').value = e.target.getAttribute('data-grade');
         document.getElementById('edit-resource-category').value = e.target.getAttribute('data-category');
+        document.getElementById('drawer-overlay').classList.remove('hidden'); document.getElementById('resource-drawer').classList.add('open');
+    }
+    
+    // Save / Bookmark
+    if (e.target.classList.contains('save-btn')) {
+        const savedList = currentUserData.savedResources || [];
+        const isSaved = savedList.includes(docId);
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        const resRef = doc(db, "resources", docId);
         
-        document.getElementById('drawer-overlay').classList.remove('hidden');
-        document.getElementById('resource-drawer').classList.add('open');
+        // Optimistic UI update could go here, but onSnapshot handles it almost instantly
+        if (isSaved) {
+            await updateDoc(userRef, { savedResources: arrayRemove(docId) });
+            await updateDoc(resRef, { saves: increment(-1) });
+        } else {
+            await updateDoc(userRef, { savedResources: arrayUnion(docId) });
+            await updateDoc(resRef, { saves: increment(1) });
+        }
     }
 });
 
@@ -451,7 +496,7 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
         progressDiv.classList.remove('hidden'); document.getElementById('progress-text').innerText = "Uploading to cloud...";
 
         const cloudName = "aqqngm6u"; 
-        const uploadPreset = "class_hub_preset"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
+        const uploadPreset = "YOUR_UPLOAD_PRESET"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
 
         const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", uploadPreset);
 
@@ -460,13 +505,12 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
             const data = await response.json();
             if (data.secure_url) {
                 await addDoc(collection(db, "resources"), {
-                    title, url: data.secure_url, fileName: file.name, targetGrade: targetGrade, category: category, type: type,
+                    title, url: data.secure_url, fileName: file.name, targetGrade: targetGrade, category: category, type: type, saves: 0,
                     uploadedByUsername: currentUserData.username, uploadedByClass: currentUserData.classSection, timestamp: new Date()
                 });
                 document.getElementById('resource-title').value = ''; document.getElementById('resource-file').value = '';
                 uploadBtn.disabled = false; uploadBtn.style.opacity = '1'; progressDiv.classList.add('hidden');
                 
-                // Automatically switch to the feed where they just uploaded the file
                 document.getElementById(type === 'competitive' ? 'tab-competitive' : 'tab-feed').click();
                 
             } else throw new Error("Upload failed");
