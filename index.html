@@ -6,13 +6,13 @@
     <title>PCM Resource Hub</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="dark-theme">
     <canvas id="chem-canvas"></canvas> 
     
     <header>
         <h1>PCM Resource Hub</h1>
         <div class="header-controls">
-            <button id="theme-toggle" class="icon-btn">🌙</button>
+            <button id="theme-toggle" class="icon-btn">☀️</button>
             <div id="user-info"></div>
         </div>
     </header>
@@ -65,10 +65,11 @@
         <section id="dashboard-section" class="hidden">
             <div class="tabs">
                 <button id="tab-feed" class="active">Class Feed</button>
+                <button id="tab-competitive">Competitive Prep</button>
                 <button id="tab-admin" class="hidden">Admin Panel</button>
             </div>
 
-            <!-- Resource Feed -->
+            <!-- Resource Feed (Used for both Standard & Competitive) -->
             <div id="feed-view" class="fade-in">
                 
                 <div id="upload-box" class="hidden">
@@ -76,6 +77,10 @@
                     <input type="text" id="resource-title" placeholder="e.g., Chapter 4 Physics Notes">
                     
                     <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                        <select id="resource-type" style="margin-bottom: 0;">
+                            <option value="standard">Standard Curriculum</option>
+                            <option value="competitive">Competitive (BITSAT/JEE)</option>
+                        </select>
                         <select id="resource-grade" style="margin-bottom: 0;">
                             <option value="both">Share with Both Classes</option>
                             <option value="11">Class 11 Only</option>
@@ -91,10 +96,9 @@
                     <button id="upload-btn">Upload Resource</button>
                 </div>
 
-                <!-- UPDATED: Feed Header with Search Bar -->
                 <div class="feed-header-controls">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <h3 style="margin: 0;">Class Resources</h3>
+                        <h3 id="feed-title" style="margin: 0;">Class Resources</h3>
                         <button id="refresh-feed-btn" class="icon-btn" title="Refresh Feed" style="font-size: 1.1rem; padding: 0;">🔄</button>
                     </div>
                     <div style="display: flex; gap: 10px; flex: 1; justify-content: flex-end;">
@@ -194,6 +198,13 @@
             <div class="input-group">
                 <label>Resource Title</label>
                 <input type="text" id="edit-resource-title">
+            </div>
+            <div class="input-group">
+                <label>Curriculum Type</label>
+                <select id="edit-resource-type">
+                    <option value="standard">Standard Curriculum</option>
+                    <option value="competitive">Competitive (BITSAT/JEE)</option>
+                </select>
             </div>
             <div class="input-group">
                 <label>Target Grade</label>
