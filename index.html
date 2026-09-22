@@ -92,7 +92,10 @@
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
-                    <h3 style="margin: 0;">Class Resources</h3>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <h3 style="margin: 0;">Class Resources</h3>
+                        <button id="refresh-feed-btn" class="icon-btn" title="Refresh Feed" style="font-size: 1.1rem; padding: 0;">🔄</button>
+                    </div>
                     <select id="feed-filter" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;">
                         <option value="all">All Categories</option>
                         <!-- Populated by JS -->
