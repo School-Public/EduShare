@@ -116,7 +116,7 @@ document.getElementById('save-profile-btn').addEventListener('click', async () =
     } else alert("Please fill in all profile fields.");
 });
 
-// --- SIDE DRAWERS (MODALS) ---
+// --- SIDE DRAWERS ---
 function closeDrawers() {
     document.getElementById('drawer-overlay').classList.add('hidden');
     document.getElementById('profile-drawer').classList.remove('open');
@@ -126,7 +126,6 @@ function closeDrawers() {
 document.querySelectorAll('.close-drawer-btn').forEach(btn => btn.addEventListener('click', closeDrawers));
 document.getElementById('drawer-overlay').addEventListener('click', closeDrawers);
 
-// Submit Profile Edit
 document.getElementById('submit-profile-edit').addEventListener('click', async () => {
     const newUsername = document.getElementById('edit-username').value.trim();
     const newName = document.getElementById('edit-name').value.trim();
@@ -160,7 +159,6 @@ function setupDashboard() {
     
     document.getElementById('logout-btn').addEventListener('click', () => { localStorage.removeItem('activeTab'); signOut(auth); });
     
-    // Open Profile Drawer
     document.getElementById('profile-settings-btn').addEventListener('click', () => {
         document.getElementById('edit-username').value = currentUserData.username;
         document.getElementById('edit-name').value = currentUserData.name;
@@ -184,11 +182,25 @@ function setupDashboard() {
     loadResources();
 }
 
-// --- RESOURCE FEED & EDITING ---
+// --- FEED & REAL-TIME SEARCH ---
 document.getElementById('feed-filter').addEventListener('change', (e) => { currentFilter = e.target.value; loadResources(); });
 document.getElementById('refresh-feed-btn').addEventListener('click', (e) => {
     const btn = e.currentTarget; btn.classList.add('spin-anim');
     setTimeout(() => btn.classList.remove('spin-anim'), 500); loadResources(); 
+});
+
+// New Search Logic! Filters the DOM instantly as you type
+document.getElementById('search-bar').addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const cards = document.querySelectorAll('.resource-card');
+    cards.forEach(card => {
+        const title = card.querySelector('h4').innerText.toLowerCase();
+        if (title.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
 });
 
 let resourcesUnsubscribe = null;
@@ -196,6 +208,8 @@ function loadResources() {
     if (resourcesUnsubscribe) resourcesUnsubscribe();
     resourcesUnsubscribe = onSnapshot(collection(db, "resources"), (snapshot) => {
         resourceList.innerHTML = '';
+        const currentSearch = document.getElementById('search-bar').value.toLowerCase(); // keep search applied during re-render
+        
         snapshot.forEach((firestoreDoc) => {
             const data = firestoreDoc.data();
             const target = data.targetGrade || "both"; 
@@ -221,9 +235,11 @@ function loadResources() {
                         </div>
                     `;
                 }
+                
+                const displayStyle = data.title.toLowerCase().includes(currentSearch) ? 'block' : 'none';
 
                 resourceList.innerHTML += `
-                    <div class="resource-card" style="animation-delay: 0.1s;">
+                    <div class="resource-card" style="animation-delay: 0.1s; display: ${displayStyle};">
                         ${badgeHtml} <span class="badge category">${category}</span>
                         <h4>${data.title}</h4>
                         <a href="${data.url}" target="_blank">View Resource</a>
@@ -238,7 +254,7 @@ function loadResources() {
     });
 }
 
-// Handle Edit/Delete Clicks in Feed
+// Handle Edit/Delete Clicks
 resourceList.addEventListener('click', async (e) => {
     if (e.target.classList.contains('delete-btn')) {
         if (confirm("Are you sure you want to delete this resource?")) await deleteDoc(doc(db, "resources", e.target.getAttribute('data-id')));
@@ -249,13 +265,11 @@ resourceList.addEventListener('click', async (e) => {
         document.getElementById('edit-resource-grade').value = e.target.getAttribute('data-grade');
         document.getElementById('edit-resource-category').value = e.target.getAttribute('data-category');
         
-        // Open Resource Drawer
         document.getElementById('drawer-overlay').classList.remove('hidden');
         document.getElementById('resource-drawer').classList.add('open');
     }
 });
 
-// Submit Resource Edit
 document.getElementById('submit-resource-edit').addEventListener('click', async () => {
     const docId = document.getElementById('edit-resource-id').value;
     const newTitle = document.getElementById('edit-resource-title').value;
@@ -287,7 +301,6 @@ document.getElementById('admin-category-list').addEventListener('click', async (
     }
 });
 
-// Load Students & Pending Profile Updates
 async function loadAdminPanel() {
     const usersSnapshot = await getDocs(collection(db, "users"));
     studentList.innerHTML = ''; pendingList.innerHTML = '';
@@ -353,7 +366,6 @@ async function loadAdminPanel() {
     if (pendingCount > 0) pendingRequestsContainer.classList.remove('hidden'); else pendingRequestsContainer.classList.add('hidden');
 }
 
-// Student Action Buttons
 document.getElementById('admin-view').addEventListener('click', async (e) => {
     if (e.target.classList.contains('approve-profile-btn')) {
         const uid = e.target.getAttribute('data-uid'); const userDoc = await getDoc(doc(db, "users", uid)); const pending = userDoc.data().pendingUpdate;
@@ -402,7 +414,7 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
         progressDiv.classList.remove('hidden'); document.getElementById('progress-text').innerText = "Uploading to cloud...";
 
         const cloudName = "aqqngm6u"; 
-        const uploadPreset = "YOUR_UPLOAD_PRESET"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
+        const uploadPreset = "class_hub_preset"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
 
         const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", uploadPreset);
 
