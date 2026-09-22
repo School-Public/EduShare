@@ -37,10 +37,15 @@ let profileListener = null;
 let settingsListener = null;
 let systemSettings = { maintenanceMode: false, categories: ["Physics", "Chemistry", "Math", "General"] };
 let currentFilter = "all";
+let currentFeedType = "standard"; // 'standard' or 'competitive'
 
-// --- THEME TOGGLE ---
+// --- THEME TOGGLE (Defaults to Dark) ---
 const themeToggle = document.getElementById('theme-toggle');
-if (localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-theme'); themeToggle.textContent = '☀️'; }
+if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.remove('dark-theme'); themeToggle.textContent = '🌙';
+} else {
+    localStorage.setItem('theme', 'dark'); themeToggle.textContent = '☀️';
+}
 themeToggle.addEventListener('click', () => {
     document.body.classList.toggle('dark-theme');
     if (document.body.classList.contains('dark-theme')) { localStorage.setItem('theme', 'dark'); themeToggle.textContent = '☀️'; } 
@@ -116,7 +121,6 @@ document.getElementById('save-profile-btn').addEventListener('click', async () =
     } else alert("Please fill in all profile fields.");
 });
 
-// --- SIDE DRAWERS ---
 function closeDrawers() {
     document.getElementById('drawer-overlay').classList.add('hidden');
     document.getElementById('profile-drawer').classList.remove('open');
@@ -147,7 +151,7 @@ document.getElementById('submit-profile-edit').addEventListener('click', async (
     closeDrawers();
 });
 
-// --- DASHBOARD SETUP ---
+// --- DASHBOARD & TABS SETUP ---
 function setupDashboard() {
     hideAllSections(); dashboardSection.classList.remove('hidden');
     
@@ -171,16 +175,45 @@ function setupDashboard() {
     if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden'); else uploadBox.classList.add('hidden');
     if (currentUserData.role === 'admin') { adminTab.classList.remove('hidden'); loadAdminPanel(); }
     
-    const savedTab = localStorage.getItem('activeTab');
+    const savedTab = localStorage.getItem('activeTab') || 'feed';
+    
     if (savedTab === 'admin' && currentUserData.role === 'admin') {
         document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active');
-    } else {
+        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active');
+    } else if (savedTab === 'competitive') {
+        currentFeedType = 'competitive';
         document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-feed').classList.add('active'); adminTab.classList.remove('active');
+        document.getElementById('tab-competitive').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); adminTab.classList.remove('active');
+        document.getElementById('feed-title').innerText = "Competitive Prep (BITSAT/JEE)";
+    } else {
+        currentFeedType = 'standard';
+        document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('tab-feed').classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); adminTab.classList.remove('active');
+        document.getElementById('feed-title').innerText = "Class Resources";
     }
     loadResources();
 }
+
+// --- TAB SWITCH LISTENERS ---
+document.getElementById('tab-feed').addEventListener('click', (e) => {
+    localStorage.setItem('activeTab', 'feed'); currentFeedType = 'standard';
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-title').innerText = "Class Resources"; loadResources();
+});
+
+document.getElementById('tab-competitive').addEventListener('click', (e) => {
+    localStorage.setItem('activeTab', 'competitive'); currentFeedType = 'competitive';
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-title').innerText = "Competitive Prep (BITSAT/JEE)"; loadResources();
+});
+
+document.getElementById('tab-admin').addEventListener('click', (e) => {
+    localStorage.setItem('activeTab', 'admin'); 
+    document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active');
+});
 
 // --- FEED & REAL-TIME SEARCH ---
 document.getElementById('feed-filter').addEventListener('change', (e) => { currentFilter = e.target.value; loadResources(); });
@@ -188,18 +221,11 @@ document.getElementById('refresh-feed-btn').addEventListener('click', (e) => {
     const btn = e.currentTarget; btn.classList.add('spin-anim');
     setTimeout(() => btn.classList.remove('spin-anim'), 500); loadResources(); 
 });
-
-// New Search Logic! Filters the DOM instantly as you type
 document.getElementById('search-bar').addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const cards = document.querySelectorAll('.resource-card');
+    const searchTerm = e.target.value.toLowerCase(); const cards = document.querySelectorAll('.resource-card');
     cards.forEach(card => {
         const title = card.querySelector('h4').innerText.toLowerCase();
-        if (title.includes(searchTerm)) {
-            card.style.display = 'block';
-        } else {
-            card.style.display = 'none';
-        }
+        if (title.includes(searchTerm)) card.style.display = 'block'; else card.style.display = 'none';
     });
 });
 
@@ -208,29 +234,37 @@ function loadResources() {
     if (resourcesUnsubscribe) resourcesUnsubscribe();
     resourcesUnsubscribe = onSnapshot(collection(db, "resources"), (snapshot) => {
         resourceList.innerHTML = '';
-        const currentSearch = document.getElementById('search-bar').value.toLowerCase(); // keep search applied during re-render
+        const currentSearch = document.getElementById('search-bar').value.toLowerCase(); 
         
         snapshot.forEach((firestoreDoc) => {
             const data = firestoreDoc.data();
             const target = data.targetGrade || "both"; 
             const category = data.category || "General";
+            const type = data.type || "standard"; // Default to standard if old
             const userGrades = currentUserData.accessGrades || [];
             
+            // SMART FILTERS
             let hasAccess = false;
             if (currentUserData.role === 'admin' || target === 'both' || userGrades.includes(target)) hasAccess = true;
             if (currentFilter !== "all" && category !== currentFilter) hasAccess = false;
+            
+            // Strict check: Only show competitive notes in competitive tab, standard in standard tab
+            if (type !== currentFeedType) hasAccess = false;
 
             if (hasAccess) {
                 let badgeHtml = '';
                 if (target === '11') badgeHtml = `<span class="badge class-11">Class 11</span>`;
                 else if (target === '12') badgeHtml = `<span class="badge class-12">Class 12</span>`;
                 else badgeHtml = `<span class="badge class-both">Class 11 & 12</span>`;
+                
+                let compBadgeHtml = '';
+                if (type === 'competitive') compBadgeHtml = `<span class="badge competitive">🔥 BITSAT/JEE</span>`;
 
                 let actionBtnsHtml = '';
                 if (currentUserData && (currentUserData.username === data.uploadedByUsername || currentUserData.role === 'admin')) {
                     actionBtnsHtml = `
                         <div style="margin-top: 15px;">
-                            <button class="edit-resource-btn" data-id="${firestoreDoc.id}" data-title="${data.title}" data-grade="${target}" data-category="${category}" style="background: #f59e0b; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-right: 5px;">Edit</button>
+                            <button class="edit-resource-btn" data-id="${firestoreDoc.id}" data-title="${data.title}" data-grade="${target}" data-category="${category}" data-type="${type}" style="background: #f59e0b; padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-right: 5px;">Edit</button>
                             <button class="delete-btn" data-id="${firestoreDoc.id}" style="background: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem;">Delete</button>
                         </div>
                     `;
@@ -240,7 +274,7 @@ function loadResources() {
 
                 resourceList.innerHTML += `
                     <div class="resource-card" style="animation-delay: 0.1s; display: ${displayStyle};">
-                        ${badgeHtml} <span class="badge category">${category}</span>
+                        ${compBadgeHtml} ${badgeHtml} <span class="badge category">${category}</span>
                         <h4>${data.title}</h4>
                         <a href="${data.url}" target="_blank">View Resource</a>
                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px;">
@@ -262,6 +296,7 @@ resourceList.addEventListener('click', async (e) => {
     if (e.target.classList.contains('edit-resource-btn')) {
         document.getElementById('edit-resource-id').value = e.target.getAttribute('data-id');
         document.getElementById('edit-resource-title').value = e.target.getAttribute('data-title');
+        document.getElementById('edit-resource-type').value = e.target.getAttribute('data-type');
         document.getElementById('edit-resource-grade').value = e.target.getAttribute('data-grade');
         document.getElementById('edit-resource-category').value = e.target.getAttribute('data-category');
         
@@ -273,10 +308,11 @@ resourceList.addEventListener('click', async (e) => {
 document.getElementById('submit-resource-edit').addEventListener('click', async () => {
     const docId = document.getElementById('edit-resource-id').value;
     const newTitle = document.getElementById('edit-resource-title').value;
+    const newType = document.getElementById('edit-resource-type').value;
     const newGrade = document.getElementById('edit-resource-grade').value;
     const newCategory = document.getElementById('edit-resource-category').value;
     if (newTitle) {
-        await updateDoc(doc(db, "resources", docId), { title: newTitle, targetGrade: newGrade, category: newCategory });
+        await updateDoc(doc(db, "resources", docId), { title: newTitle, type: newType, targetGrade: newGrade, category: newCategory });
         closeDrawers();
     }
 });
@@ -403,6 +439,7 @@ document.getElementById('admin-view').addEventListener('click', async (e) => {
 // --- CLOUDINARY UPLOAD LOGIC ---
 document.getElementById('upload-btn').addEventListener('click', async () => {
     const title = document.getElementById('resource-title').value;
+    const type = document.getElementById('resource-type').value; 
     const targetGrade = document.getElementById('resource-grade').value; 
     const category = document.getElementById('resource-category').value; 
     const file = document.getElementById('resource-file').files[0];
@@ -414,7 +451,7 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
         progressDiv.classList.remove('hidden'); document.getElementById('progress-text').innerText = "Uploading to cloud...";
 
         const cloudName = "aqqngm6u"; 
-        const uploadPreset = "class_hub_preset"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
+        const uploadPreset = "YOUR_UPLOAD_PRESET"; // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
 
         const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", uploadPreset);
 
@@ -423,11 +460,15 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
             const data = await response.json();
             if (data.secure_url) {
                 await addDoc(collection(db, "resources"), {
-                    title, url: data.secure_url, fileName: file.name, targetGrade: targetGrade, category: category,
+                    title, url: data.secure_url, fileName: file.name, targetGrade: targetGrade, category: category, type: type,
                     uploadedByUsername: currentUserData.username, uploadedByClass: currentUserData.classSection, timestamp: new Date()
                 });
                 document.getElementById('resource-title').value = ''; document.getElementById('resource-file').value = '';
                 uploadBtn.disabled = false; uploadBtn.style.opacity = '1'; progressDiv.classList.add('hidden');
+                
+                // Automatically switch to the feed where they just uploaded the file
+                document.getElementById(type === 'competitive' ? 'tab-competitive' : 'tab-feed').click();
+                
             } else throw new Error("Upload failed");
         } catch (error) { alert("Upload failed! Check console."); uploadBtn.disabled = false; uploadBtn.style.opacity = '1'; progressDiv.classList.add('hidden'); }
     } else alert("Please provide a title and select a file!");
@@ -436,15 +477,6 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
 document.getElementById('google-btn').addEventListener('click', () => signInWithPopup(auth, new GoogleAuthProvider()).catch(err => console.error("Login Error:", err)));
 document.getElementById('logout-pending-btn').addEventListener('click', () => signOut(auth));
 document.getElementById('logout-maintenance-btn').addEventListener('click', () => signOut(auth));
-
-document.getElementById('tab-feed').addEventListener('click', (e) => {
-    localStorage.setItem('activeTab', 'feed'); document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-admin').classList.remove('active');
-});
-document.getElementById('tab-admin').addEventListener('click', (e) => {
-    localStorage.setItem('activeTab', 'admin'); document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active');
-});
 
 // ==========================================
 // DYNAMIC CHEMISTRY MOLECULE BACKGROUND
