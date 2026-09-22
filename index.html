@@ -11,7 +11,7 @@
     <canvas id="chem-canvas"></canvas> 
     
     <header>
-        <h1>EduShare</h1>
+        <h1>Class Resource Hub</h1>
         <div class="header-controls">
             <button id="theme-toggle" class="icon-btn">🌙</button>
             <div id="user-info"></div>
@@ -19,8 +19,14 @@
     </header>
 
     <main class="animate-fade-in">
+        <!-- Default Loading Screen -->
+        <div id="loading-screen" style="text-align: center; padding: 4rem 0;">
+            <h2 style="color: var(--accent);">Loading Hub...</h2>
+            <p>Verifying secure connection...</p>
+        </div>
+
         <!-- Secure Google Login Only Section -->
-        <section id="auth-section">
+        <section id="auth-section" class="hidden">
             <h2>Student Portal</h2>
             <p style="margin-bottom: 2rem;">Access is strictly restricted to authorized students. Please log in with your Google account to request access.</p>
             <button id="google-btn">Log in with Google</button>
