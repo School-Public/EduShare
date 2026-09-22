@@ -91,7 +91,6 @@ function initializeSystem() {
     
     settingsListener = onSnapshot(doc(db, "settings", "system"), async (docSnap) => {
         if (!docSnap.exists()) {
-            // Auto-create settings DB if admin logs in first time
             if (currentUserData.role === 'admin') {
                 await setDoc(doc(db, "settings", "system"), systemSettings);
             }
@@ -101,16 +100,13 @@ function initializeSystem() {
         systemSettings = docSnap.data();
         updateCategoryUI();
         
-        // Maintenance Mode Kick Check
         if (systemSettings.maintenanceMode && currentUserData.role !== 'admin') {
             hideAllSections();
             maintenanceSection.classList.remove('hidden');
         } else {
-            // If they are admin or maintenance is off, show dashboard (only if not already visible)
             if (dashboardSection.classList.contains('hidden')) {
                 setupDashboard();
             }
-            // Update Admin Toggle button visual
             const mBtn = document.getElementById('toggle-maintenance-btn');
             if (systemSettings.maintenanceMode) {
                 mBtn.innerText = "Disable Maintenance"; mBtn.classList.add('maintenance-active');
@@ -131,11 +127,8 @@ function updateCategoryUI() {
     adminCatList.innerHTML = '';
 
     systemSettings.categories.forEach(cat => {
-        // Upload Dropdown
         uploadSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        // Filter Dropdown
         filterSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        // Admin Manager
         adminCatList.innerHTML += `
             <div class="admin-cat-tag">
                 ${cat} 
@@ -143,7 +136,7 @@ function updateCategoryUI() {
             </div>
         `;
     });
-    filterSelect.value = currentFilter; // keep selection on update
+    filterSelect.value = currentFilter; 
 }
 
 // --- ONBOARDING LOGIC ---
@@ -195,10 +188,18 @@ function setupDashboard() {
     loadResources();
 }
 
-// --- FILTER & LOAD RESOURCES ---
+// --- FILTER, REFRESH & LOAD RESOURCES ---
 document.getElementById('feed-filter').addEventListener('change', (e) => {
     currentFilter = e.target.value;
-    loadResources(); // Reload feed with filter
+    loadResources(); 
+});
+
+// The New Manual Refresh Button Logic
+document.getElementById('refresh-feed-btn').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    btn.classList.add('spin-anim'); // Start the spin animation
+    setTimeout(() => btn.classList.remove('spin-anim'), 500); // Remove class after 0.5s so it can spin again next time
+    loadResources(); 
 });
 
 let resourcesUnsubscribe = null;
@@ -256,7 +257,6 @@ resourceList.addEventListener('click', async (e) => {
 document.getElementById('toggle-maintenance-btn').addEventListener('click', async () => {
     try {
         const newStatus = !systemSettings.maintenanceMode;
-        // Using setDoc with merge:true forces Firebase to create the document if it's missing!
         await setDoc(doc(db, "settings", "system"), { maintenanceMode: newStatus }, { merge: true });
     } catch (error) {
         console.error("Maintenance Error:", error);
@@ -384,7 +384,8 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
         progressDiv.classList.remove('hidden'); document.getElementById('progress-text').innerText = "Uploading to cloud...";
 
         const cloudName = "aqqngm6u"; 
-        const uploadPreset = "class_hub_preset"; // TODO: PASTE YOUR CLOUDINARY PRESET HERE
+        // TODO: PASTE YOUR ACTUAL CLOUDINARY PRESET HERE
+        const uploadPreset = "YOUR_UPLOAD_PRESET"; 
 
         const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", uploadPreset);
 
