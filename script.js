@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAuth, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, onSnapshot, doc, getDoc, setDoc, deleteDoc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// TODO: Paste your Firebase Config here!
+// Your Firebase Config
 const firebaseConfig = {
     apiKey: "AIzaSyC4nP0HVlsAr7Rg1NxwJJkiD2sKNSGHgJc",
     authDomain: "class-resource-hub-fed71.firebaseapp.com",
@@ -18,6 +18,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // DOM Elements
+const loadingScreen = document.getElementById('loading-screen');
 const authSection = document.getElementById('auth-section');
 const onboardingSection = document.getElementById('onboarding-section');
 const pendingSection = document.getElementById('pending-section');
@@ -52,13 +53,14 @@ themeToggle.addEventListener('click', () => {
 });
 
 function hideAllSections() {
+    loadingScreen.classList.add('hidden');
     authSection.classList.add('hidden');
     onboardingSection.classList.add('hidden');
     pendingSection.classList.add('hidden');
     dashboardSection.classList.add('hidden');
 }
 
-// --- AUTH STATE & ONBOARDING ---
+// --- AUTH STATE & REAL-TIME LISTENER ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         profileListener = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
@@ -87,12 +89,13 @@ onAuthStateChanged(auth, (user) => {
     } else {
         if (profileListener) profileListener(); 
         hideAllSections();
-        authSection.classList.remove('hidden');
+        authSection.classList.remove('hidden'); // Shows Google Login
         userInfo.innerHTML = '';
         currentUserData = null;
     }
 });
 
+// Profile Setup Request
 document.getElementById('save-profile-btn').addEventListener('click', async () => {
     const name = document.getElementById('profile-name').value;
     const username = document.getElementById('profile-username').value;
@@ -108,6 +111,7 @@ document.getElementById('save-profile-btn').addEventListener('click', async () =
 
 document.getElementById('logout-pending-btn').addEventListener('click', () => signOut(auth));
 
+// --- DASHBOARD SETUP WITH LOCAL STORAGE FIX ---
 function setupDashboard() {
     dashboardSection.classList.remove('hidden');
     
@@ -115,7 +119,10 @@ function setupDashboard() {
         <span style="font-weight:600;">@${currentUserData.username}</span> 
         <button id="logout-btn" class="secondary" style="margin-left:10px; padding: 0.4rem 0.8rem;">Logout</button>
     `;
-    document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('activeTab'); // clear memory on logout
+        signOut(auth);
+    });
 
     if (currentUserData.role === 'admin' || currentUserData.canUpload === true) {
         uploadBox.classList.remove('hidden');
@@ -126,6 +133,20 @@ function setupDashboard() {
     if (currentUserData.role === 'admin') {
         adminTab.classList.remove('hidden');
         loadAdminPanel(); 
+    }
+    
+    // Check browser memory for last open tab
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab === 'admin' && currentUserData.role === 'admin') {
+        document.getElementById('admin-view').classList.remove('hidden');
+        document.getElementById('feed-view').classList.add('hidden');
+        adminTab.classList.add('active');
+        document.getElementById('tab-feed').classList.remove('active');
+    } else {
+        document.getElementById('feed-view').classList.remove('hidden');
+        document.getElementById('admin-view').classList.add('hidden');
+        document.getElementById('tab-feed').classList.add('active');
+        adminTab.classList.remove('active');
     }
     
     loadResources();
@@ -280,7 +301,7 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
         progressDiv.classList.remove('hidden'); document.getElementById('progress-text').innerText = "Uploading to cloud...";
 
         const cloudName = "aqqngm6u"; 
-        const uploadPreset = "class_hub_preset"; // TODO: PASTE YOUR CLOUDINARY PRESET HERE
+        const uploadPreset = "YOUR_UPLOAD_PRESET"; // TODO: PASTE YOUR CLOUDINARY PRESET HERE
 
         const formData = new FormData(); formData.append("file", file); formData.append("upload_preset", uploadPreset);
 
@@ -308,14 +329,21 @@ document.getElementById('google-btn').addEventListener('click', () => {
     signInWithPopup(auth, provider).catch(err => console.error("Google Login Error:", err));
 });
 
-// Switch Tabs
+// Switch Tabs (Now saving state to localStorage)
 document.getElementById('tab-feed').addEventListener('click', (e) => {
-    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-admin').classList.remove('active');
+    localStorage.setItem('activeTab', 'feed'); 
+    document.getElementById('feed-view').classList.remove('hidden'); 
+    document.getElementById('admin-view').classList.add('hidden');
+    e.target.classList.add('active'); 
+    document.getElementById('tab-admin').classList.remove('active');
 });
+
 document.getElementById('tab-admin').addEventListener('click', (e) => {
-    document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active');
+    localStorage.setItem('activeTab', 'admin'); 
+    document.getElementById('admin-view').classList.remove('hidden'); 
+    document.getElementById('feed-view').classList.add('hidden');
+    e.target.classList.add('active'); 
+    document.getElementById('tab-feed').classList.remove('active');
 });
 
 // ==========================================
@@ -357,7 +385,6 @@ class Particle {
     draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        // Atom color (adapts to light/dark mode based on body class check during animation)
         const isDark = document.body.classList.contains('dark-theme');
         ctx.fillStyle = isDark ? 'rgba(96, 165, 250, 0.5)' : 'rgba(59, 130, 246, 0.4)';
         ctx.fill();
@@ -374,24 +401,21 @@ function init() {
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const isDark = document.body.classList.contains('dark-theme');
-    const bondColor = isDark ? '96, 165, 250' : '59, 130, 246'; // RGB values for the bond lines
+    const bondColor = isDark ? '96, 165, 250' : '59, 130, 246'; 
 
-    // Update and draw atoms
     for (let i = 0; i < particlesArray.length; i++) {
         particlesArray[i].update();
         particlesArray[i].draw();
         
-        // Check distance to all other atoms to draw bonds
         for (let j = i; j < particlesArray.length; j++) {
             const dx = particlesArray[i].x - particlesArray[j].x;
             const dy = particlesArray[i].y - particlesArray[j].y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             
             if (distance < connectionDistance) {
-                // The closer they are, the more opaque the bond line
                 const opacity = 1 - (distance / connectionDistance);
                 ctx.beginPath();
-                ctx.strokeStyle = `rgba(${bondColor}, ${opacity * 0.5})`; // Keep it subtle (max 0.5 opacity)
+                ctx.strokeStyle = `rgba(${bondColor}, ${opacity * 0.5})`; 
                 ctx.lineWidth = 1;
                 ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
                 ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
