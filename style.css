@@ -49,10 +49,14 @@ button { background: var(--accent); color: white; border: none; padding: 0.85rem
 button:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
 button.secondary { background: var(--border-color); color: var(--text-main); }
 button.secondary:hover { background: var(--text-muted); color: white; }
-.icon-btn { background: transparent; font-size: 1.5rem; padding: 0.2rem; cursor: pointer; }
+.icon-btn { background: transparent; font-size: 1.5rem; padding: 0.2rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .icon-btn:hover { background: transparent; transform: scale(1.1); box-shadow: none; }
 #google-btn { background: #ea4335; max-width: 300px; margin: 0 auto; display: block; font-size: 1.1rem; padding: 1rem; }
 #google-btn:hover { background: #d62d20; box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3); }
+
+/* Spin Animation for Refresh Button */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin-anim { animation: spin 0.5s ease-out; }
 
 .tabs { display: flex; gap: 10px; margin-bottom: 2rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; }
 .tabs button { background: transparent; color: var(--text-muted); padding: 0.5rem 1rem; box-shadow: none; }
