@@ -143,60 +143,78 @@
                 <div id="student-list" class="student-grid"></div>
             </div>
         </section>
+    </main>
 
-        <!-- --- POPUP MODALS --- -->
-        <div id="modal-overlay" class="hidden"></div>
+    <!-- --- PREMIUM SIDE DRAWERS --- -->
+    <div id="drawer-overlay" class="hidden"></div>
 
-        <!-- Profile Edit Modal -->
-        <div id="profile-modal" class="modal hidden">
-            <h3>⚙️ Profile Settings</h3>
-            <label style="font-size: 0.85rem; font-weight: 600;">Username (Updates instantly)</label>
-            <input type="text" id="edit-username">
+    <!-- Profile Edit Drawer -->
+    <div id="profile-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3 style="margin: 0;">⚙️ Profile Settings</h3>
+            <button class="close-drawer-btn">×</button>
+        </div>
+        <div class="drawer-body">
+            <div class="input-group">
+                <label>Username <span style="color:var(--success); font-weight:normal; font-size:0.75rem;">(Updates instantly)</span></label>
+                <input type="text" id="edit-username">
+            </div>
             
-            <label style="font-size: 0.85rem; font-weight: 600; color: #f59e0b;">Full Name (Requires Admin Approval)</label>
-            <input type="text" id="edit-name">
+            <div class="input-group">
+                <label>Full Name <span style="color:#f59e0b; font-weight:normal; font-size:0.75rem;">(Needs Admin Approval)</span></label>
+                <input type="text" id="edit-name">
+            </div>
             
-            <label style="font-size: 0.85rem; font-weight: 600; color: #f59e0b;">Class & Section (Requires Admin Approval)</label>
-            <div style="display:flex; gap:10px;">
-                <select id="edit-grade" style="flex: 1;">
+            <div class="input-group">
+                <label>Class & Section <span style="color:#f59e0b; font-weight:normal; font-size:0.75rem;">(Needs Admin Approval)</span></label>
+                <div style="display:flex; gap:10px;">
+                    <select id="edit-grade" style="flex: 1; margin:0;">
+                        <option value="11">Class 11</option>
+                        <option value="12">Class 12</option>
+                    </select>
+                    <input type="text" id="edit-section" placeholder="e.g., PCM A" style="flex: 2; margin:0;">
+                </div>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button id="submit-profile-edit" class="btn-gradient">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- Resource Edit Drawer -->
+    <div id="resource-drawer" class="drawer">
+        <div class="drawer-header">
+            <h3 style="margin: 0;">✏️ Edit Resource</h3>
+            <button class="close-drawer-btn">×</button>
+        </div>
+        <div class="drawer-body">
+            <input type="hidden" id="edit-resource-id">
+            
+            <div class="input-group">
+                <label>Resource Title</label>
+                <input type="text" id="edit-resource-title">
+            </div>
+            
+            <div class="input-group">
+                <label>Target Grade</label>
+                <select id="edit-resource-grade">
+                    <option value="both">Both Classes</option>
                     <option value="11">Class 11</option>
                     <option value="12">Class 12</option>
                 </select>
-                <input type="text" id="edit-section" placeholder="e.g., PCM A" style="flex: 2;">
             </div>
             
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button id="submit-profile-edit" style="flex: 1;">Save Changes</button>
-                <button class="secondary close-modal-btn" style="flex: 1;">Cancel</button>
-            </div>
-        </div>
-
-        <!-- Resource Edit Modal -->
-        <div id="resource-modal" class="modal hidden">
-            <h3>✏️ Edit Resource</h3>
-            <input type="hidden" id="edit-resource-id">
-            
-            <label style="font-size: 0.85rem; font-weight: 600;">Resource Title</label>
-            <input type="text" id="edit-resource-title">
-            
-            <label style="font-size: 0.85rem; font-weight: 600;">Target Grade</label>
-            <select id="edit-resource-grade">
-                <option value="both">Both Classes</option>
-                <option value="11">Class 11</option>
-                <option value="12">Class 12</option>
-            </select>
-            
-            <label style="font-size: 0.85rem; font-weight: 600;">Category</label>
-            <select id="edit-resource-category">
-                <!-- Populated by JS -->
-            </select>
-            
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button id="submit-resource-edit" style="flex: 1;">Update Resource</button>
-                <button class="secondary close-modal-btn" style="flex: 1;">Cancel</button>
+            <div class="input-group">
+                <label>Category</label>
+                <select id="edit-resource-category">
+                    <!-- Populated by JS -->
+                </select>
             </div>
         </div>
-    </main>
+        <div class="drawer-footer">
+            <button id="submit-resource-edit" class="btn-gradient">Update Resource</button>
+        </div>
+    </div>
 
     <script type="module" src="script.js"></script>
 </body>
