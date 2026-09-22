@@ -98,7 +98,6 @@
                     </div>
                     <select id="feed-filter" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;">
                         <option value="all">All Categories</option>
-                        <!-- Populated by JS -->
                     </select>
                 </div>
 
@@ -107,11 +106,8 @@
 
             <!-- Admin Panel -->
             <div id="admin-view" class="hidden fade-in">
-                
-                <!-- System Settings Box -->
                 <div class="admin-settings-box">
                     <h3>⚙️ System Settings</h3>
-                    
                     <div class="settings-row" style="margin-bottom: 1.5rem;">
                         <div>
                             <strong>Maintenance Mode</strong>
@@ -119,19 +115,14 @@
                         </div>
                         <button id="toggle-maintenance-btn" class="secondary">Enable Maintenance</button>
                     </div>
-
                     <div class="settings-row" style="align-items: flex-start; flex-direction: column;">
                         <strong>Manage Resource Categories</strong>
                         <p style="margin: 0 0 10px 0; font-size: 0.85rem;">Add subjects or chapters for students to filter by.</p>
-                        
                         <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 10px;">
                             <input type="text" id="new-category-input" placeholder="e.g., Organic Chemistry" style="margin: 0;">
                             <button id="add-category-btn" style="white-space: nowrap;">Add Category</button>
                         </div>
-                        
-                        <div id="admin-category-list" class="category-tags-container">
-                            <!-- Populated by JS -->
-                        </div>
+                        <div id="admin-category-list" class="category-tags-container"></div>
                     </div>
                 </div>
 
@@ -152,6 +143,59 @@
                 <div id="student-list" class="student-grid"></div>
             </div>
         </section>
+
+        <!-- --- POPUP MODALS --- -->
+        <div id="modal-overlay" class="hidden"></div>
+
+        <!-- Profile Edit Modal -->
+        <div id="profile-modal" class="modal hidden">
+            <h3>⚙️ Profile Settings</h3>
+            <label style="font-size: 0.85rem; font-weight: 600;">Username (Updates instantly)</label>
+            <input type="text" id="edit-username">
+            
+            <label style="font-size: 0.85rem; font-weight: 600; color: #f59e0b;">Full Name (Requires Admin Approval)</label>
+            <input type="text" id="edit-name">
+            
+            <label style="font-size: 0.85rem; font-weight: 600; color: #f59e0b;">Class & Section (Requires Admin Approval)</label>
+            <div style="display:flex; gap:10px;">
+                <select id="edit-grade" style="flex: 1;">
+                    <option value="11">Class 11</option>
+                    <option value="12">Class 12</option>
+                </select>
+                <input type="text" id="edit-section" placeholder="e.g., PCM A" style="flex: 2;">
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="submit-profile-edit" style="flex: 1;">Save Changes</button>
+                <button class="secondary close-modal-btn" style="flex: 1;">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Resource Edit Modal -->
+        <div id="resource-modal" class="modal hidden">
+            <h3>✏️ Edit Resource</h3>
+            <input type="hidden" id="edit-resource-id">
+            
+            <label style="font-size: 0.85rem; font-weight: 600;">Resource Title</label>
+            <input type="text" id="edit-resource-title">
+            
+            <label style="font-size: 0.85rem; font-weight: 600;">Target Grade</label>
+            <select id="edit-resource-grade">
+                <option value="both">Both Classes</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+            </select>
+            
+            <label style="font-size: 0.85rem; font-weight: 600;">Category</label>
+            <select id="edit-resource-category">
+                <!-- Populated by JS -->
+            </select>
+            
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="submit-resource-edit" style="flex: 1;">Update Resource</button>
+                <button class="secondary close-modal-btn" style="flex: 1;">Cancel</button>
+            </div>
+        </div>
     </main>
 
     <script type="module" src="script.js"></script>
