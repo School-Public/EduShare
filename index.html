@@ -91,14 +91,18 @@
                     <button id="upload-btn">Upload Resource</button>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+                <!-- UPDATED: Feed Header with Search Bar -->
+                <div class="feed-header-controls">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <h3 style="margin: 0;">Class Resources</h3>
                         <button id="refresh-feed-btn" class="icon-btn" title="Refresh Feed" style="font-size: 1.1rem; padding: 0;">🔄</button>
                     </div>
-                    <select id="feed-filter" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;">
-                        <option value="all">All Categories</option>
-                    </select>
+                    <div style="display: flex; gap: 10px; flex: 1; justify-content: flex-end;">
+                        <input type="text" id="search-bar" placeholder="🔍 Search notes..." style="margin: 0; max-width: 200px; border-radius: 20px; padding: 0.4rem 1rem;">
+                        <select id="feed-filter" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem; border-radius: 20px;">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div id="resource-list"></div>
@@ -145,7 +149,7 @@
         </section>
     </main>
 
-    <!-- --- PREMIUM SIDE DRAWERS --- -->
+    <!-- PREMIUM SIDE DRAWERS -->
     <div id="drawer-overlay" class="hidden"></div>
 
     <!-- Profile Edit Drawer -->
@@ -159,12 +163,10 @@
                 <label>Username <span style="color:var(--success); font-weight:normal; font-size:0.75rem;">(Updates instantly)</span></label>
                 <input type="text" id="edit-username">
             </div>
-            
             <div class="input-group">
                 <label>Full Name <span style="color:#f59e0b; font-weight:normal; font-size:0.75rem;">(Needs Admin Approval)</span></label>
                 <input type="text" id="edit-name">
             </div>
-            
             <div class="input-group">
                 <label>Class & Section <span style="color:#f59e0b; font-weight:normal; font-size:0.75rem;">(Needs Admin Approval)</span></label>
                 <div style="display:flex; gap:10px;">
@@ -189,12 +191,10 @@
         </div>
         <div class="drawer-body">
             <input type="hidden" id="edit-resource-id">
-            
             <div class="input-group">
                 <label>Resource Title</label>
                 <input type="text" id="edit-resource-title">
             </div>
-            
             <div class="input-group">
                 <label>Target Grade</label>
                 <select id="edit-resource-grade">
@@ -203,7 +203,6 @@
                     <option value="12">Class 12</option>
                 </select>
             </div>
-            
             <div class="input-group">
                 <label>Category</label>
                 <select id="edit-resource-category">
