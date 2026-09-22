@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class 11 PCM Resource Hub</title>
+    <title>PCM Resource Hub</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <canvas id="chem-canvas"></canvas> 
     
     <header>
-        <h1>Class Resource Hub</h1>
+        <h1>PCM Resource Hub</h1>
         <div class="header-controls">
             <button id="theme-toggle" class="icon-btn">🌙</button>
             <div id="user-info"></div>
@@ -38,7 +38,14 @@
             <p>Set up your student identity to send an access request to the Administrator.</p>
             <input type="text" id="profile-name" placeholder="Full Name">
             <input type="text" id="profile-username" placeholder="Username (e.g., gameoid)">
-            <input type="text" id="profile-class" placeholder="Class & Section (e.g., 11 PCM A)">
+            
+            <select id="profile-grade">
+                <option value="" disabled selected>Select Your Grade</option>
+                <option value="11">Class 11</option>
+                <option value="12">Class 12</option>
+            </select>
+
+            <input type="text" id="profile-section" placeholder="Stream/Section (e.g., PCM A)">
             <button id="save-profile-btn" style="width: 100%;">Request Access</button>
         </section>
 
@@ -62,9 +69,16 @@
                 <div id="upload-box" class="hidden">
                     <h3>Share a New Resource</h3>
                     <input type="text" id="resource-title" placeholder="e.g., Chapter 4 Physics Notes">
+                    
+                    <select id="resource-grade">
+                        <option value="both">Share with Both Classes</option>
+                        <option value="11">Class 11 Only</option>
+                        <option value="12">Class 12 Only</option>
+                    </select>
+
                     <input type="file" id="resource-file" accept=".pdf, .doc, .docx, .ppt, .pptx, image/*">
                     <div id="upload-progress" class="hidden">Uploading... <span id="progress-text">0%</span></div>
-                    <button id="upload-btn">Upload to Class Feed</button>
+                    <button id="upload-btn">Upload Resource</button>
                 </div>
                 <h3>Recent Class Resources</h3>
                 <div id="resource-list"></div>
@@ -75,7 +89,7 @@
                 <div class="admin-header">
                     <div>
                         <h3>Manage Students</h3>
-                        <p>Approve new requests and manage existing access.</p>
+                        <p>Approve requests and manage grade access feeds.</p>
                     </div>
                     <div class="admin-stats">
                         <span id="stat-students">0 Approved Students</span>
