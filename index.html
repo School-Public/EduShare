@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Live Interactive Chemistry Background -->
     <canvas id="chem-canvas"></canvas> 
     
     <header>
@@ -25,35 +24,40 @@
             <p>Verifying secure connection...</p>
         </div>
 
-        <!-- Secure Google Login Only Section -->
+        <!-- Maintenance Mode Screen -->
+        <div id="maintenance-section" class="hidden" style="text-align: center; padding: 4rem 0;">
+            <h1 style="font-size: 3rem; margin-bottom: 0;">🛠️</h1>
+            <h2 style="color: var(--danger);">System Under Maintenance</h2>
+            <p>The Administrator is currently organizing resources and updating the platform.</p>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Please check back later!</p>
+            <button id="logout-maintenance-btn" class="secondary" style="margin-top: 1rem;">Log Out</button>
+        </div>
+
+        <!-- Secure Google Login -->
         <section id="auth-section" class="hidden">
             <h2>Student Portal</h2>
             <p style="margin-bottom: 2rem;">Access is strictly restricted to authorized students. Please log in with your Google account to request access.</p>
             <button id="google-btn">Log in with Google</button>
         </section>
 
-        <!-- First-Time Profile Setup -->
+        <!-- Profile Setup -->
         <section id="onboarding-section" class="hidden">
             <h2>Complete Your Profile</h2>
-            <p>Set up your student identity to send an access request to the Administrator.</p>
             <input type="text" id="profile-name" placeholder="Full Name">
             <input type="text" id="profile-username" placeholder="Username (e.g., gameoid)">
-            
             <select id="profile-grade">
                 <option value="" disabled selected>Select Your Grade</option>
                 <option value="11">Class 11</option>
                 <option value="12">Class 12</option>
             </select>
-
             <input type="text" id="profile-section" placeholder="Stream/Section (e.g., PCM A)">
             <button id="save-profile-btn" style="width: 100%;">Request Access</button>
         </section>
 
-        <!-- Pending Approval Waiting Room -->
+        <!-- Waiting Room -->
         <section id="pending-section" class="hidden" style="text-align: center; padding: 2rem 0;">
             <h2 style="color: var(--accent);">Request Sent!</h2>
             <p>Your account is waiting for approval from the Administrator.</p>
-            <p style="font-size: 0.9rem; margin-bottom: 2rem;">Keep this page open. You will be automatically redirected once access is granted.</p>
             <button id="logout-pending-btn" class="secondary">Cancel & Log Out</button>
         </section>
 
@@ -66,43 +70,81 @@
 
             <!-- Resource Feed -->
             <div id="feed-view" class="fade-in">
+                
                 <div id="upload-box" class="hidden">
                     <h3>Share a New Resource</h3>
                     <input type="text" id="resource-title" placeholder="e.g., Chapter 4 Physics Notes">
                     
-                    <select id="resource-grade">
-                        <option value="both">Share with Both Classes</option>
-                        <option value="11">Class 11 Only</option>
-                        <option value="12">Class 12 Only</option>
-                    </select>
+                    <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                        <select id="resource-grade" style="margin-bottom: 0;">
+                            <option value="both">Share with Both Classes</option>
+                            <option value="11">Class 11 Only</option>
+                            <option value="12">Class 12 Only</option>
+                        </select>
+                        <select id="resource-category" style="margin-bottom: 0;">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
 
                     <input type="file" id="resource-file" accept=".pdf, .doc, .docx, .ppt, .pptx, image/*">
                     <div id="upload-progress" class="hidden">Uploading... <span id="progress-text">0%</span></div>
                     <button id="upload-btn">Upload Resource</button>
                 </div>
-                <h3>Recent Class Resources</h3>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+                    <h3 style="margin: 0;">Class Resources</h3>
+                    <select id="feed-filter" style="width: auto; padding: 0.4rem 1rem; margin: 0; font-size: 0.9rem;">
+                        <option value="all">All Categories</option>
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
                 <div id="resource-list"></div>
             </div>
 
             <!-- Admin Panel -->
             <div id="admin-view" class="hidden fade-in">
-                <div class="admin-header">
+                
+                <!-- System Settings Box -->
+                <div class="admin-settings-box">
+                    <h3>⚙️ System Settings</h3>
+                    
+                    <div class="settings-row" style="margin-bottom: 1.5rem;">
+                        <div>
+                            <strong>Maintenance Mode</strong>
+                            <p style="margin: 0; font-size: 0.85rem;">Lock students out of the hub while you organize.</p>
+                        </div>
+                        <button id="toggle-maintenance-btn" class="secondary">Enable Maintenance</button>
+                    </div>
+
+                    <div class="settings-row" style="align-items: flex-start; flex-direction: column;">
+                        <strong>Manage Resource Categories</strong>
+                        <p style="margin: 0 0 10px 0; font-size: 0.85rem;">Add subjects or chapters for students to filter by.</p>
+                        
+                        <div style="display: flex; gap: 10px; width: 100%; margin-bottom: 10px;">
+                            <input type="text" id="new-category-input" placeholder="e.g., Organic Chemistry" style="margin: 0;">
+                            <button id="add-category-btn" style="white-space: nowrap;">Add Category</button>
+                        </div>
+                        
+                        <div id="admin-category-list" class="category-tags-container">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-header" style="margin-top: 2rem;">
                     <div>
                         <h3>Manage Students</h3>
                         <p>Approve requests and manage grade access feeds.</p>
                     </div>
-                    <div class="admin-stats">
-                        <span id="stat-students">0 Approved Students</span>
-                    </div>
+                    <div class="admin-stats"><span id="stat-students">0 Approved Students</span></div>
                 </div>
                 
-                <!-- Pending Requests Queue -->
                 <div id="pending-requests-container" class="hidden">
                     <h4 style="color: #f59e0b; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Pending Requests</h4>
                     <div id="pending-list" class="student-grid" style="margin-bottom: 2rem;"></div>
                 </div>
 
-                <!-- Approved Students -->
                 <h4 style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Approved Students</h4>
                 <div id="student-list" class="student-grid"></div>
             </div>
