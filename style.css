@@ -40,7 +40,7 @@ body {
     overflow-x: hidden;
 }
 
-/* NEW: The dynamic canvas background */
+/* Dynamic canvas background */
 #chem-canvas {
     position: fixed;
     top: 0;
@@ -48,7 +48,7 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    pointer-events: none; /* Allows you to click through the animation */
+    pointer-events: none;
 }
 
 header {
