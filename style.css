@@ -40,38 +40,18 @@ body {
     overflow-x: hidden;
 }
 
-/* Dynamic canvas background */
-#chem-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
-    pointer-events: none;
-}
+#chem-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
 
 header {
-    background: var(--header-bg);
-    backdrop-filter: blur(12px);
-    padding: 1rem 5%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    background: var(--header-bg); backdrop-filter: blur(12px);
+    padding: 1rem 5%; display: flex; justify-content: space-between;
+    align-items: center; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: sticky; top: 0; z-index: 100;
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .header-controls { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-
-header h1 {
-    margin: 0; font-size: 1.5rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
+header h1 { margin: 0; font-size: 1.5rem; background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
 main {
     max-width: 800px; width: 90%; margin: 2rem auto;
@@ -85,13 +65,13 @@ main {
 h2, h3 { color: var(--text-main); margin-top: 0; }
 p { color: var(--text-muted); }
 
-input {
+input, select {
     width: 100%; padding: 0.85rem 1rem; margin-bottom: 1rem;
     border: 1px solid var(--border-color); border-radius: 8px;
     box-sizing: border-box; font-size: 1rem; background: var(--input-bg);
-    color: var(--text-main); transition: all 0.2s;
+    color: var(--text-main); transition: all 0.2s; font-family: 'Inter', sans-serif;
 }
-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
 
 button {
     background: var(--accent); color: white; border: none;
@@ -110,6 +90,12 @@ button.secondary:hover { background: var(--text-muted); color: white; }
 .tabs button { background: transparent; color: var(--text-muted); padding: 0.5rem 1rem; box-shadow: none; }
 .tabs button.active { color: var(--accent); background: rgba(59, 130, 246, 0.1); }
 
+/* Badges for 11th vs 12th Feeds */
+.badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+.badge.class-11 { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge.class-12 { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.3); }
+.badge.class-both { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+
 .resource-card {
     background: var(--card-solid); padding: 1.25rem; margin-bottom: 1rem;
     border-radius: 12px; border: 1px solid var(--border-color);
@@ -120,7 +106,7 @@ button.secondary:hover { background: var(--text-muted); color: white; }
 .resource-card a { color: var(--accent); font-weight: 600; text-decoration: none; }
 #upload-box { background: var(--input-bg); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px dashed var(--border-color); }
 
-input[type="file"] { padding: 0.5rem; background: var(--card-solid); cursor: pointer; }
+input[type="file"] { padding: 0.5rem; background: var(--card-solid); cursor: pointer; margin-bottom: 1rem;}
 input[type="file"]::file-selector-button { background: var(--accent); color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 10px; font-weight: 600; transition: 0.2s; }
 input[type="file"]::file-selector-button:hover { background: var(--accent-hover); }
 
@@ -131,14 +117,14 @@ input[type="file"]::file-selector-button:hover { background: var(--accent-hover)
 .student-info strong { display: block; color: var(--text-main); }
 .student-info span { font-size: 0.85rem; color: var(--text-muted); }
 
-.access-btn { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.access-btn { padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-right: 5px; margin-top: 5px;}
 .access-granted { background: var(--success); }
 .access-granted:hover { background: #059669; }
 .approve-btn { background: var(--success); color: white; padding: 0.4rem 0.8rem; font-size: 0.85rem; }
 .approve-btn:hover { background: #059669; transform: none; box-shadow: none; }
 .deny-btn { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 5px; }
 .deny-btn:hover { background: var(--danger); color: white; transform: none; box-shadow: none; }
-.ban-btn { padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 5px; background: var(--danger); color: white; }
+.ban-btn { padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 5px; background: var(--danger); color: white; margin-top: 5px; }
 .ban-btn:hover { background: #dc2626; transform: none; box-shadow: none; }
 .ban-btn.unban { background: var(--text-muted); }
 .ban-btn.unban:hover { background: #4b5563; }
