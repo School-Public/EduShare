@@ -63,20 +63,51 @@
 
         <!-- Main Dashboard -->
         <section id="dashboard-section" class="hidden">
-            
-            <!-- TABS WITH INLINE OVERFLOW OVERRIDE FOR THE BADGE -->
             <div class="tabs" style="align-items: center; overflow: visible !important;">
                 <button id="tab-feed" class="active">Class Feed</button>
                 <button id="tab-competitive">Competitive Prep</button>
                 <button id="tab-bookmarks">Bookmarks</button>
                 
-                <!-- EDUSHARE PREP STATIC LINK TAB -->
-                <a href="https://edushare-prep.vercel.app/" target="_blank" style="text-decoration: none; position: relative; background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); padding: 0.5rem 1rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; margin-left: 5px;">
+                <!-- EDUSHARE PREP TAB BUTTON -->
+                <button id="tab-prep" style="position: relative; display: inline-flex; align-items: center; gap: 6px;">
                     ⚡ EduShare Prep
                     <span style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 999px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);">New</span>
-                </a>
+                </button>
 
                 <button id="tab-admin" class="hidden">Admin Panel</button>
+            </div>
+
+            <!-- NEW: EDUSHARE PREP INTERNAL VIEW -->
+            <div id="prep-view" class="hidden fade-in">
+                <div style="background: linear-gradient(135deg, rgba(30,41,59,0.5), rgba(15,23,42,0.8)); border: 1px solid rgba(59,130,246,0.2); border-radius: 16px; padding: 2.5rem; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); padding: 0.4rem 1rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem;">
+                        🚀 Platform Expansion
+                    </div>
+                    <h2 style="font-size: 2.2rem; margin-bottom: 1rem; color: #fff;">Master Your Exams with <span style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">EduShare Prep</span></h2>
+                    <p style="color: var(--text-muted); font-size: 1.05rem; max-w: 600px; margin: 0 auto 2.5rem; line-height: 1.6;">We've built a dedicated, distraction-free engine specifically for JEE and NEET aspirants. Move beyond standard notes and start practicing like it's test day.</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; text-align: left;">
+                        <div style="background: var(--card-solid); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">⏱️</div>
+                            <h4 style="color: var(--text-main); margin-bottom: 0.5rem;">Live CBT Simulator</h4>
+                            <p style="font-size: 0.85rem; margin: 0; color: var(--text-muted);">Practice full-length previous year papers in an interface identical to the actual NTA exam format.</p>
+                        </div>
+                        <div style="background: var(--card-solid); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
+                            <h4 style="color: var(--text-main); margin-bottom: 0.5rem;">Chapter-wise PYQs</h4>
+                            <p style="font-size: 0.85rem; margin: 0; color: var(--text-muted);">Isolate your weaknesses. Filter verified questions by subject, chapter, and specific sub-topics.</p>
+                        </div>
+                        <div style="background: var(--card-solid); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2rem; margin-bottom: 0.5rem;">📈</div>
+                            <h4 style="color: var(--text-main); margin-bottom: 0.5rem;">Smart Analytics</h4>
+                            <p style="font-size: 0.85rem; margin: 0; color: var(--text-muted);">Track your total solved questions and strike rate live in your personalized student dashboard.</p>
+                        </div>
+                    </div>
+    
+                    <a href="https://edushare-prep.vercel.app/" target="_blank" class="btn-gradient" style="text-decoration: none; padding: 1rem 2.5rem; font-size: 1.1rem; display: inline-flex; align-items: center; gap: 10px; font-weight: bold; border-radius: 12px; box-shadow: 0 10px 20px rgba(59,130,246,0.3); transition: transform 0.2s;">
+                        Launch EduShare Prep Engine →
+                    </a>
+                </div>
             </div>
 
             <!-- Resource Feed -->
