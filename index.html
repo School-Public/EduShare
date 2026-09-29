@@ -5,6 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PCM Resource Hub</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Custom Dropdown for EduShare Prep Tab */
+        .tabs { overflow: visible !important; flex-wrap: wrap !important; }
+        .prep-wrapper { position: relative; display: inline-block; z-index: 100; }
+        .prep-popover {
+            visibility: hidden; opacity: 0; transform: translateY(10px);
+            position: absolute; top: calc(100% + 15px); left: 0; width: 300px;
+            background: var(--card-solid); border: 1px solid var(--accent); border-radius: 16px;
+            padding: 1.5rem; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left; white-space: normal; cursor: default;
+        }
+        .prep-wrapper:hover .prep-popover, .prep-popover:hover {
+            visibility: visible; opacity: 1; transform: translateY(0);
+        }
+        .prep-popover::before {
+            content: ''; position: absolute; top: -7px; left: 25px;
+            width: 14px; height: 14px; background: var(--card-solid);
+            border-left: 1px solid var(--accent); border-top: 1px solid var(--accent);
+            transform: rotate(45deg);
+        }
+        @media (max-width: 600px) {
+            .prep-popover { left: 50%; transform: translate(-50%, 10px); }
+            .prep-wrapper:hover .prep-popover { transform: translate(-50%, 0); }
+            .prep-popover::before { left: 50%; transform: translateX(-50%) rotate(45deg); }
+        }
+    </style>
 </head>
 <body class="dark-theme">
     <canvas id="chem-canvas"></canvas> 
@@ -63,17 +90,31 @@
 
         <!-- Main Dashboard -->
         <section id="dashboard-section" class="hidden">
-            
             <div class="tabs" style="align-items: center;">
                 <button id="tab-feed" class="active">Class Feed</button>
                 <button id="tab-competitive">Competitive Prep</button>
                 <button id="tab-bookmarks">Bookmarks</button>
                 
-                <!-- NEW EDUSHARE PREP TAB LINK -->
-                <a href="https://edushare-prep.vercel.app/" target="_blank" style="text-decoration: none; background: rgba(59, 130, 246, 0.1); color: var(--accent); padding: 0.5rem 1rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; border: 1px solid rgba(59, 130, 246, 0.2);">
-                    ⚡ EduShare Prep
-                    <span style="background: var(--danger); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 999px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);">New</span>
-                </a>
+                <!-- NEW EDUSHARE PREP DROPDOWN TAB -->
+                <div class="prep-wrapper">
+                    <button style="background: rgba(59, 130, 246, 0.1); color: var(--accent); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 0.5rem 1rem; font-weight: 600; display: flex; align-items: center; gap: 8px; position: relative;">
+                        ⚡ EduShare Prep
+                        <span style="background: var(--danger); color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); position: absolute; top: -8px; right: -8px;">New</span>
+                    </button>
+                    
+                    <!-- Popover Content -->
+                    <div class="prep-popover">
+                        <h4 style="margin: 0 0 8px 0; color: var(--text-main); font-size: 1.15rem; display: flex; align-items: center; gap: 6px;">
+                            🎯 Master Your Exams
+                        </h4>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+                            Switch to our dedicated exam engine to practice NTA-aligned chapter-wise PYQs, take timed CBT mock tests, and track your live accuracy rate.
+                        </p>
+                        <a href="https://edushare-prep.vercel.app/" target="_blank" class="btn-gradient" style="text-decoration: none; padding: 0.8rem 1rem; display: block; text-align: center; border-radius: 10px; font-weight: 600; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);">
+                            Launch Prep Engine 🚀
+                        </a>
+                    </div>
+                </div>
 
                 <button id="tab-admin" class="hidden">Admin Panel</button>
             </div>
