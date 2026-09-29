@@ -12,6 +12,11 @@
     <header>
         <h1>PCM Resource Hub</h1>
         <div class="header-controls">
+            <!-- NEW EDUSHARE PREP BUTTON -->
+            <a href="https://edushare-prep.vercel.app/" target="_blank" class="btn-gradient" style="text-decoration: none; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.85rem; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 0 15px rgba(59,130,246,0.4);">
+                ⚡ Try EduShare Prep
+            </a>
+            
             <button id="theme-toggle" class="icon-btn">☀️</button>
             <div id="user-info"></div>
         </div>
@@ -63,6 +68,21 @@
 
         <!-- Main Dashboard -->
         <section id="dashboard-section" class="hidden">
+            
+            <!-- NEW EDUSHARE PREP ANNOUNCEMENT BANNER -->
+            <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)); border: 1px solid var(--accent); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); animation: slideUp 0.5s ease-out;">
+                <div>
+                    <h3 style="margin: 0 0 5px 0; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                        🚀 Unlock EduShare Prep
+                        <span style="background: var(--accent); color: white; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 1px;">Live</span>
+                    </h3>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.9rem;">Experience our new NTA-aligned CBT Mock Simulator and Chapter-wise PYQ Database.</p>
+                </div>
+                <a href="https://edushare-prep.vercel.app/" target="_blank" class="btn-gradient" style="text-decoration: none; width: auto; padding: 0.8rem 1.5rem; display: inline-block;">
+                    Launch Prep Engine →
+                </a>
+            </div>
+
             <div class="tabs">
                 <button id="tab-feed" class="active">Class Feed</button>
                 <button id="tab-competitive">Competitive Prep</button>
