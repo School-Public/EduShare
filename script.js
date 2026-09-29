@@ -30,6 +30,7 @@ const studentList = document.getElementById('student-list');
 const pendingList = document.getElementById('pending-list');
 const pendingRequestsContainer = document.getElementById('pending-requests-container');
 const userInfo = document.getElementById('user-info');
+const prepView = document.getElementById('prep-view'); // NEW: Reference the prep view
 
 let currentUserData = null;
 let pendingUserAuth = null; 
@@ -167,19 +168,22 @@ function setupDashboard() {
     const savedTab = localStorage.getItem('activeTab') || 'feed';
     
     if (savedTab === 'admin' && currentUserData.role === 'admin') {
-        document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active');
+        document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden'); prepView.classList.add('hidden');
+        adminTab.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
     } else if (savedTab === 'competitive') {
-        currentFeedType = 'competitive'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-competitive').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); adminTab.classList.remove('active');
+        currentFeedType = 'competitive'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.add('hidden');
+        document.getElementById('tab-competitive').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); adminTab.classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
         document.getElementById('feed-title').innerText = "Competitive Prep (NEET/JEE)";
     } else if (savedTab === 'bookmarks') {
-        currentFeedType = 'bookmarks'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-bookmarks').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); adminTab.classList.remove('active');
-        document.getElementById('feed-title').innerText = "My Saved Notes"; uploadBox.classList.add('hidden'); // Hide upload when viewing bookmarks
+        currentFeedType = 'bookmarks'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.add('hidden');
+        document.getElementById('tab-bookmarks').classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); adminTab.classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
+        document.getElementById('feed-title').innerText = "My Saved Notes"; uploadBox.classList.add('hidden');
+    } else if (savedTab === 'prep') {
+        currentFeedType = 'prep'; document.getElementById('feed-view').classList.add('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.remove('hidden');
+        document.getElementById('tab-prep').classList.add('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); adminTab.classList.remove('active');
     } else {
-        currentFeedType = 'standard'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-        document.getElementById('tab-feed').classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); adminTab.classList.remove('active');
+        currentFeedType = 'standard'; document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.add('hidden');
+        document.getElementById('tab-feed').classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); adminTab.classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
         document.getElementById('feed-title').innerText = "Class Resources";
     }
     loadResources();
@@ -188,8 +192,8 @@ function setupDashboard() {
 // --- TAB SWITCH LISTENERS ---
 document.getElementById('tab-feed').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'feed'); currentFeedType = 'standard';
-    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
     document.getElementById('feed-title').innerText = "Class Resources"; 
     if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden');
     loadResources();
@@ -197,8 +201,8 @@ document.getElementById('tab-feed').addEventListener('click', (e) => {
 
 document.getElementById('tab-competitive').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'competitive'); currentFeedType = 'competitive';
-    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
     document.getElementById('feed-title').innerText = "Competitive Prep (NEET/JEE)"; 
     if (currentUserData.role === 'admin' || currentUserData.canUpload) uploadBox.classList.remove('hidden');
     loadResources();
@@ -206,16 +210,30 @@ document.getElementById('tab-competitive').addEventListener('click', (e) => {
 
 document.getElementById('tab-bookmarks').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'bookmarks'); currentFeedType = 'bookmarks';
-    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active');
+    document.getElementById('feed-view').classList.remove('hidden'); document.getElementById('admin-view').classList.add('hidden'); prepView.classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-admin').classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
     document.getElementById('feed-title').innerText = "My Saved Notes"; uploadBox.classList.add('hidden'); 
     loadResources();
 });
 
+// NEW: EDUSHARE PREP TAB LISTENER
+document.getElementById('tab-prep').addEventListener('click', () => {
+    localStorage.setItem('activeTab', 'prep'); 
+    document.getElementById('feed-view').classList.add('hidden'); 
+    document.getElementById('admin-view').classList.add('hidden');
+    prepView.classList.remove('hidden');
+
+    document.getElementById('tab-prep').classList.add('active'); 
+    document.getElementById('tab-feed').classList.remove('active'); 
+    document.getElementById('tab-competitive').classList.remove('active'); 
+    document.getElementById('tab-bookmarks').classList.remove('active'); 
+    document.getElementById('tab-admin').classList.remove('active');
+});
+
 document.getElementById('tab-admin').addEventListener('click', (e) => {
     localStorage.setItem('activeTab', 'admin'); 
-    document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden');
-    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active');
+    document.getElementById('admin-view').classList.remove('hidden'); document.getElementById('feed-view').classList.add('hidden'); prepView.classList.add('hidden');
+    e.target.classList.add('active'); document.getElementById('tab-feed').classList.remove('active'); document.getElementById('tab-competitive').classList.remove('active'); document.getElementById('tab-bookmarks').classList.remove('active'); document.getElementById('tab-prep').classList.remove('active');
 });
 
 // --- FEED & REAL-TIME SEARCH ---
@@ -251,15 +269,12 @@ function loadResources() {
             let hasAccess = false;
             
             if (currentFeedType === 'bookmarks') {
-                // In bookmarks tab, only show if they saved it
                 if (savedList.includes(docId)) hasAccess = true;
             } else {
-                // In standard/competitive tabs, check grade access and match tab type
                 if (currentUserData.role === 'admin' || target === 'both' || userGrades.includes(target)) hasAccess = true;
                 if (type !== currentFeedType) hasAccess = false;
             }
             
-            // Apply category dropdown filter
             if (currentFilter !== "all" && category !== currentFilter) hasAccess = false;
 
             if (hasAccess) {
@@ -281,7 +296,6 @@ function loadResources() {
                     `;
                 }
                 
-                // SAVE BUTTON LOGIC
                 const isSaved = savedList.includes(docId);
                 const saveBtnText = isSaved ? '🌟 Saved' : '⭐ Save';
                 const saveBtnStyle = isSaved 
@@ -313,16 +327,13 @@ function loadResources() {
     });
 }
 
-// Handle All Card Clicks (Delete, Edit, Save)
 resourceList.addEventListener('click', async (e) => {
     const docId = e.target.getAttribute('data-id');
     
-    // Delete
     if (e.target.classList.contains('delete-btn')) {
         if (confirm("Are you sure you want to delete this resource?")) await deleteDoc(doc(db, "resources", docId));
     }
     
-    // Edit
     if (e.target.classList.contains('edit-resource-btn')) {
         document.getElementById('edit-resource-id').value = docId;
         document.getElementById('edit-resource-title').value = e.target.getAttribute('data-title');
@@ -332,14 +343,12 @@ resourceList.addEventListener('click', async (e) => {
         document.getElementById('drawer-overlay').classList.remove('hidden'); document.getElementById('resource-drawer').classList.add('open');
     }
     
-    // Save / Bookmark
     if (e.target.classList.contains('save-btn')) {
         const savedList = currentUserData.savedResources || [];
         const isSaved = savedList.includes(docId);
         const userRef = doc(db, "users", auth.currentUser.uid);
         const resRef = doc(db, "resources", docId);
         
-        // Optimistic UI update could go here, but onSnapshot handles it almost instantly
         if (isSaved) {
             await updateDoc(userRef, { savedResources: arrayRemove(docId) });
             await updateDoc(resRef, { saves: increment(-1) });
